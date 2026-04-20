@@ -3,6 +3,7 @@ using HRMS.Data;
 using HRMS.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Controllers;
 
@@ -12,19 +13,181 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
     private static readonly TimeSpan ShiftDuration = TimeSpan.FromHours(6);
     private readonly ApplicationDbContext _dbContext = dbContext;
 
-    [Authorize(Roles = Roles.Employee)]
+    [Authorize(Roles = Roles.Employee + "," + Roles.ProductionManager)]
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(DateTime? weekStart)
     {
-        return RedirectToAction(nameof(MySchedule));
+        var currentMondayUtc = GetWeekStartMonday(DateTime.UtcNow.Date);
+        var isProductionManagerOnly = User.IsInRole(Roles.ProductionManager) && !User.IsInRole(Roles.Employee);
+
+        if (isProductionManagerOnly)
+        {
+            var weekOptions = await _dbContext.WorkShifts
+                .Select(s => s.WeekStartDate.Date)
+                .Distinct()
+                .OrderByDescending(d => d)
+                .ToListAsync();
+
+            var selectedWeek = weekStart.HasValue ? GetWeekStartMonday(weekStart.Value.Date) : weekOptions.FirstOrDefault();
+
+            var rows = new List<ProductionWeekScheduleItemViewModel>();
+            if (selectedWeek != default)
+            {
+                rows = await _dbContext.WorkShifts
+                    .Where(s => s.WeekStartDate.Date == selectedWeek)
+                    .GroupBy(s => s.EmployeeUserId)
+                    .Select(g => new
+                    {
+                        EmployeeUserId = g.Key,
+                        ShiftCount = g.Count()
+                    })
+                    .Join(_dbContext.Users,
+                        g => g.EmployeeUserId,
+                        u => u.Id,
+                        (g, u) => new ProductionWeekScheduleItemViewModel
+                        {
+                            EmployeeUserId = g.EmployeeUserId,
+                            EmployeeName = u.DisplayName ?? u.Email ?? u.UserName ?? g.EmployeeUserId,
+                            EmployeeEmail = u.Email ?? u.UserName ?? string.Empty,
+                            TotalHours = g.ShiftCount * ShiftDuration.TotalHours,
+                            Status = g.ShiftCount == 6 ? "Complete" : "Pending"
+                        })
+                    .OrderBy(r => r.EmployeeName)
+                    .ToListAsync();
+            }
+
+            return View(new ScheduleIndexViewModel
+            {
+                IsProductionManagerView = true,
+                CurrentMondayUtc = currentMondayUtc,
+                SelectedWeekStartUtc = selectedWeek == default ? null : selectedWeek,
+                AvailableWeeks = weekOptions,
+                ProductionWeekSchedules = rows
+            });
+        }
+
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var weeklySummaries = await _dbContext.WorkShifts
+            .Where(s => s.EmployeeUserId == currentUserId)
+            .GroupBy(s => s.WeekStartDate.Date)
+            .Select(g => new ScheduleWeekSummaryViewModel
+            {
+                WeekStartUtc = g.Key,
+                TotalHours = g.Count() * ShiftDuration.TotalHours
+            })
+            .OrderByDescending(w => w.WeekStartUtc)
+            .ToListAsync();
+
+        foreach (var summary in weeklySummaries)
+        {
+            summary.Status = Math.Abs(summary.TotalHours - 36) < 0.001 ? "Complete" : "Pending";
+            summary.CanEdit = summary.WeekStartUtc >= currentMondayUtc;
+        }
+
+        return View(new ScheduleIndexViewModel
+        {
+            IsProductionManagerView = false,
+            CurrentMondayUtc = currentMondayUtc,
+            ScheduledWeeks = weeklySummaries
+        });
+    }
+
+    [Authorize(Roles = Roles.Employee)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ScheduleNewWeek(DateTime weekStartUtc)
+    {
+        if (weekStartUtc.DayOfWeek != DayOfWeek.Monday)
+        {
+            TempData["ErrorMessage"] = "Please select a Monday as the week start date.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var normalizedWeekStart = GetWeekStartMonday(weekStartUtc.Date);
+        var currentMondayUtc = GetWeekStartMonday(DateTime.UtcNow.Date);
+
+        if (normalizedWeekStart <= currentMondayUtc)
+        {
+            TempData["ErrorMessage"] = "Please select a future Monday to schedule a new week.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var alreadyScheduled = await _dbContext.WorkShifts.AnyAsync(s =>
+            s.EmployeeUserId == currentUserId && s.WeekStartDate.Date == normalizedWeekStart);
+
+        if (alreadyScheduled)
+        {
+            TempData["ErrorMessage"] = "That week is already scheduled.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return RedirectToAction(nameof(Edit), new { weekStart = normalizedWeekStart.ToString("yyyy-MM-dd") });
     }
 
     [Authorize(Roles = Roles.Employee + "," + Roles.ProductionManager)]
     [HttpGet]
-    public IActionResult MySchedule()
+    public async Task<IActionResult> Edit(DateTime weekStart, string? employeeUserId = null)
     {
-        var weekStartUtc = DateTime.UtcNow.Date;
-        return View(new EmployeeScheduleViewModel(weekStartUtc, BuildWeeklySlots(weekStartUtc)));
+        var weekStartUtc = GetWeekStartMonday(weekStart.Date);
+        var currentMondayUtc = GetWeekStartMonday(DateTime.UtcNow.Date);
+        var isProductionManagerOnly = User.IsInRole(Roles.ProductionManager) && !User.IsInRole(Roles.Employee);
+
+        string targetEmployeeUserId;
+        if (isProductionManagerOnly)
+        {
+            targetEmployeeUserId = employeeUserId ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(targetEmployeeUserId))
+            {
+                TempData["ErrorMessage"] = "Select an employee week from the list to view details.";
+                return RedirectToAction(nameof(Index), new { weekStart = weekStartUtc.ToString("yyyy-MM-dd") });
+            }
+        }
+        else
+        {
+            targetEmployeeUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(targetEmployeeUserId))
+            {
+                return Unauthorized();
+            }
+        }
+
+        var existingShifts = await _dbContext.WorkShifts
+            .Where(s => s.EmployeeUserId == targetEmployeeUserId && s.WeekStartDate.Date == weekStartUtc)
+            .OrderBy(s => s.StartTimeUtc)
+            .ToListAsync();
+
+        var selectedKeys = existingShifts
+            .Select(s => $"{s.StartTimeUtc:yyyyMMddHH}")
+            .ToHashSet(StringComparer.Ordinal);
+
+        var isPastWeek = weekStartUtc < currentMondayUtc;
+        var isReadOnly = isProductionManagerOnly || isPastWeek;
+        if (!isProductionManagerOnly && isPastWeek && existingShifts.Count == 0)
+        {
+            TempData["ErrorMessage"] = "Past weeks cannot be scheduled.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var model = new EmployeeScheduleViewModel(weekStartUtc, BuildWeeklySlots(weekStartUtc, selectedKeys))
+        {
+            IsReadOnly = isReadOnly,
+            IsPastWeek = isPastWeek,
+            EmployeeUserId = targetEmployeeUserId,
+            PageTitle = isReadOnly ? "Weekly Schedule Details" : "Edit Weekly Schedule"
+        };
+
+        return View(model);
     }
 
     [Authorize(Roles = Roles.Employee)]
@@ -32,10 +195,23 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitMySchedule(EmployeeScheduleViewModel model)
     {
+        var weekStartUtc = GetWeekStartMonday(model.WeekStartUtc.Date);
+        model.WeekStartUtc = weekStartUtc;
+        var currentMondayUtc = GetWeekStartMonday(DateTime.UtcNow.Date);
+
+        if (weekStartUtc < currentMondayUtc)
+        {
+            TempData["ErrorMessage"] = "Past weeks are read-only and cannot be edited.";
+            return RedirectToAction(nameof(Index));
+        }
+
         if (!ModelState.IsValid)
         {
-            model.Slots = BuildWeeklySlots(model.WeekStartUtc.Date, model.Slots.Where(slot => slot.IsSelected).Select(slot => slot.Key).ToHashSet(StringComparer.Ordinal));
-            return View("MySchedule", model);
+            model.Slots = BuildWeeklySlots(weekStartUtc, model.Slots.Where(slot => slot.IsSelected).Select(slot => slot.Key).ToHashSet(StringComparer.Ordinal));
+            model.IsReadOnly = false;
+            model.IsPastWeek = false;
+            model.PageTitle = "Edit Weekly Schedule";
+            return View("Edit", model);
         }
 
         var selectedSlots = model.Slots.Where(slot => slot.IsSelected).ToList();
@@ -50,24 +226,45 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
             .Select(slot => new WorkShift
             {
                 EmployeeUserId = currentUserId,
+                WeekStartDate = weekStartUtc,
                 StartTimeUtc = slot.StartTimeUtc,
                 EndTimeUtc = slot.EndTimeUtc,
                 HourlyRate = slot.HourlyRate
             })
             .ToList();
 
-        var validationErrors = ValidateSixThirtySixRule(shifts, model.WeekStartUtc.Date, model.WeekStartUtc.Date.AddDays(7));
+        var validationErrors = ValidateSixThirtySixRule(shifts, weekStartUtc, weekStartUtc.AddDays(7));
         if (validationErrors.Count > 0)
         {
-            model.Slots = BuildWeeklySlots(model.WeekStartUtc.Date, selectedSlots.Select(slot => slot.Key).ToHashSet(StringComparer.Ordinal));
+            model.Slots = BuildWeeklySlots(weekStartUtc, selectedSlots.Select(slot => slot.Key).ToHashSet(StringComparer.Ordinal));
+            model.IsReadOnly = false;
+            model.IsPastWeek = false;
+            model.PageTitle = "Edit Weekly Schedule";
             ViewBag.ValidationErrors = validationErrors;
-            return View("MySchedule", model);
+            return View("Edit", model);
+        }
+
+        var existingWeekShifts = await _dbContext.WorkShifts
+            .Where(s => s.EmployeeUserId == currentUserId && s.WeekStartDate.Date == weekStartUtc)
+            .ToListAsync();
+
+        if (existingWeekShifts.Count > 0)
+        {
+            _dbContext.WorkShifts.RemoveRange(existingWeekShifts);
         }
 
         _dbContext.WorkShifts.AddRange(shifts);
         await _dbContext.SaveChangesAsync();
 
-        return RedirectToAction(nameof(MySchedule));
+        TempData["SuccessMessage"] = "Weekly schedule saved successfully.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [Authorize(Roles = Roles.Employee + "," + Roles.ProductionManager)]
+    [HttpGet]
+    public IActionResult MySchedule()
+    {
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
@@ -91,6 +288,7 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
             .Select(s => new WorkShift
             {
                 EmployeeUserId = s.EmployeeUserId,
+                WeekStartDate = weekStartUtc,
                 StartTimeUtc = DateTime.SpecifyKind(s.StartTimeUtc, DateTimeKind.Utc),
                 EndTimeUtc = DateTime.SpecifyKind(s.EndTimeUtc, DateTimeKind.Utc),
                 HourlyRate = s.HourlyRate
@@ -194,7 +392,7 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
     {
         var slots = new List<EmployeeShiftSlot>();
 
-        for (var dayOffset = 0; dayOffset < 6; dayOffset++)
+        for (var dayOffset = 0; dayOffset < 7; dayOffset++)
         {
             var dayStart = weekStartUtc.AddDays(dayOffset);
 
@@ -220,6 +418,13 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
 
         return slots;
     }
+
+    private static DateTime GetWeekStartMonday(DateTime dateUtc)
+    {
+        var date = dateUtc.Date;
+        var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
+        return date.AddDays(-diff);
+    }
 }
 
 public class CreateWeeklyScheduleRequest
@@ -240,6 +445,10 @@ public class EmployeeScheduleViewModel
 {
     public DateTime WeekStartUtc { get; set; }
     public List<EmployeeShiftSlot> Slots { get; set; } = [];
+    public bool IsReadOnly { get; set; }
+    public bool IsPastWeek { get; set; }
+    public string? EmployeeUserId { get; set; }
+    public string PageTitle { get; set; } = "Weekly Schedule";
 
     public EmployeeScheduleViewModel()
     {
@@ -262,4 +471,31 @@ public class EmployeeShiftSlot
     public DateTime EndTimeUtc { get; set; }
     public decimal HourlyRate { get; set; }
     public bool IsSelected { get; set; }
+}
+
+public class ScheduleIndexViewModel
+{
+    public bool IsProductionManagerView { get; set; }
+    public DateTime CurrentMondayUtc { get; set; }
+    public DateTime? SelectedWeekStartUtc { get; set; }
+    public List<DateTime> AvailableWeeks { get; set; } = [];
+    public List<ScheduleWeekSummaryViewModel> ScheduledWeeks { get; set; } = [];
+    public List<ProductionWeekScheduleItemViewModel> ProductionWeekSchedules { get; set; } = [];
+}
+
+public class ScheduleWeekSummaryViewModel
+{
+    public DateTime WeekStartUtc { get; set; }
+    public double TotalHours { get; set; }
+    public string Status { get; set; } = "Pending";
+    public bool CanEdit { get; set; }
+}
+
+public class ProductionWeekScheduleItemViewModel
+{
+    public string EmployeeUserId { get; set; } = string.Empty;
+    public string EmployeeName { get; set; } = string.Empty;
+    public string EmployeeEmail { get; set; } = string.Empty;
+    public double TotalHours { get; set; }
+    public string Status { get; set; } = "Pending";
 }

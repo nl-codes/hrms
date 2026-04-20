@@ -1,0 +1,153 @@
+@model EmployeeScheduleViewModel
+
+@{
+    ViewData["Title"] = Model.PageTitle;
+}
+
+<div class="dashboard-card">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <p class="eyebrow mb-2">Employee Scheduling</p>
+            <h1 class="h3 mb-1">@Model.PageTitle</h1>
+            <p class="text-muted mb-0">
+                Week of @Model.WeekStartUtc.ToString("yyyy-MM-dd") to
+                @Model.WeekStartUtc.AddDays(6).ToString("yyyy-MM-dd")
+            </p>
+            @if (Model.IsReadOnly)
+            {
+                <div class="alert alert-info mt-3 mb-0">This week is read-only. Past schedules can be viewed but not edited.
+                </div>
+            }
+        </div>
+        <div class="schedule-summary text-end">
+            <div class="small text-muted">Weekly Hours</div>
+            <div id="weeklyHours" class="display-6 fw-bold">0</div>
+            <div id="weeklyStatus" class="small text-danger">You must reach 36 hours before submitting.</div>
+        </div>
+    </div>
+
+    @if (ViewBag.ValidationErrors is IEnumerable<string> validationErrors)
+    {
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach (var error in validationErrors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <form asp-action="SubmitMySchedule" method="post" id="scheduleForm">
+        <input asp-for="WeekStartUtc" type="hidden" />
+        <div class="table-responsive">
+            <table class="table schedule-table align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 20%">Day</th>
+                        <th style="width: 20%">Shift</th>
+                        <th style="width: 20%">Hours</th>
+                        <th style="width: 20%">Select</th>
+                        <th style="width: 20%">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var index = 0; index < Model.Slots.Count; index++)
+                    {
+                        <tr data-hours="6" data-day="@Model.Slots[index].DayLabel">
+                            <td class="fw-semibold">@Model.Slots[index].DayLabel</td>
+                            <td>@Model.Slots[index].StartLabel - @Model.Slots[index].EndLabel</td>
+                            <td>6</td>
+                            <td>
+                                <input asp-for="Slots[index].IsSelected" class="form-check-input shift-check"
+                                       data-key="@Model.Slots[index].Key" disabled="@(Model.IsReadOnly ? "disabled" : null)" />
+                                <input asp-for="Slots[index].Key" type="hidden" />
+                                <input asp-for="Slots[index].DayLabel" type="hidden" />
+                                <input asp-for="Slots[index].StartLabel" type="hidden" />
+                                <input asp-for="Slots[index].EndLabel" type="hidden" />
+                                <input asp-for="Slots[index].StartTimeUtc" type="hidden" />
+                                <input asp-for="Slots[index].EndTimeUtc" type="hidden" />
+                                <input asp-for="Slots[index].HourlyRate" type="hidden" />
+                            </td>
+                            <td class="slot-status text-muted">Not selected</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center gap-3 mt-3">
+            <div id="formError" class="text-danger fw-semibold"></div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
+                @if (!Model.IsReadOnly)
+                {
+                    <button type="submit" id="submitSchedule" class="btn btn-primary">Save Week Schedule</button>
+                }
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const form = document.getElementById('scheduleForm');
+            const hoursEl = document.getElementById('weeklyHours');
+            const statusEl = document.getElementById('weeklyStatus');
+            const errorEl = document.getElementById('formError');
+            const submitButton = document.getElementById('submitSchedule');
+            const canSubmit = Boolean(submitButton);
+
+            function updateSummary() {
+                let hours = 0;
+                const selectedByDay = new Map();
+
+                document.querySelectorAll('.schedule-table tbody tr').forEach(row => {
+                    const checkbox = row.querySelector('.shift-check');
+                    const day = row.getAttribute('data-day');
+                    const selected = checkbox.checked;
+
+                    row.querySelector('.slot-status').textContent = selected ? 'Selected' : 'Not selected';
+                    row.querySelector('.slot-status').classList.toggle('text-success', selected);
+                    row.querySelector('.slot-status').classList.toggle('text-muted', !selected);
+
+                    if (selected) {
+                        hours += Number(row.getAttribute('data-hours'));
+                        selectedByDay.set(day, (selectedByDay.get(day) || 0) + 1);
+                    }
+                });
+
+                hoursEl.textContent = hours.toString();
+
+                if (!canSubmit) {
+                    statusEl.textContent = 'Read-only week.';
+                    errorEl.textContent = '';
+                    return;
+                }
+
+                if (hours !== 36) {
+                    statusEl.textContent = 'You must reach exactly 36 hours per week.';
+                    errorEl.textContent = 'Select six 6-hour shifts to satisfy the weekly requirement.';
+                    submitButton.disabled = true;
+                    return;
+                }
+
+                const overLimitDay = [...selectedByDay.values()].some(count => count > 2);
+                if (overLimitDay) {
+                    statusEl.textContent = 'A day cannot exceed 12 hours.';
+                    errorEl.textContent = 'Remove extra shifts from any day with more than two selections.';
+                    submitButton.disabled = true;
+                    return;
+                }
+
+                statusEl.textContent = 'Schedule is valid for submission.';
+                errorEl.textContent = '';
+                submitButton.disabled = false;
+            }
+
+            form.addEventListener('change', updateSummary);
+            updateSummary();
+        })();
+    </script>
+}

@@ -10,6 +10,9 @@ public class WorkShift
     public string EmployeeUserId { get; set; } = string.Empty;
 
     [Required]
+    public DateTime WeekStartDate { get; set; }
+
+    [Required]
     public DateTime StartTimeUtc { get; set; }
 
     [Required]

@@ -36,6 +36,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .IsUnique();
 
         builder.Entity<WorkShift>()
-            .HasIndex(s => new { s.EmployeeUserId, s.StartTimeUtc, s.EndTimeUtc });
+            .HasIndex(s => new { s.EmployeeUserId, s.WeekStartDate, s.StartTimeUtc, s.EndTimeUtc });
     }
 }

@@ -228,9 +228,12 @@ namespace HRMS.Migrations
                     b.Property<DateTime>("StartTimeUtc")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime>("WeekStartDate")
+                        .HasColumnType("datetime(6)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeUserId", "StartTimeUtc", "EndTimeUtc");
+                    b.HasIndex("EmployeeUserId", "WeekStartDate", "StartTimeUtc", "EndTimeUtc");
 
                     b.ToTable("WorkShifts");
                 });
