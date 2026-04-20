@@ -75,7 +75,7 @@
                                 <td>@item.TotalHours</td>
                                 <td>
                                     <span
-                                    class="badge @(item.Status == "Complete" ? "text-bg-success" : "text-bg-warning")">@item.Status</span>
+                                    class="badge @(item.Status == "Completed" ? "text-bg-success" : item.Status == "Ongoing" ? "text-bg-warning" : "text-bg-secondary")">@item.Status</span>
                                 </td>
                                 <td class="text-end">
                                     <a class="btn btn-sm btn-outline-primary" asp-action="Edit"
@@ -129,7 +129,7 @@
                                 <td>@week.TotalHours</td>
                                 <td>
                                     <span
-                                    class="badge @(week.Status == "Complete" ? "text-bg-success" : "text-bg-warning")">@week.Status</span>
+                                    class="badge @(week.Status == "Completed" ? "text-bg-success" : week.Status == "Ongoing" ? "text-bg-warning" : "text-bg-secondary")">@week.Status</span>
                                 </td>
                                 <td class="text-end">
                                     <a class="btn btn-sm @(week.CanEdit ? "btn-outline-primary" : "btn-outline-secondary")"

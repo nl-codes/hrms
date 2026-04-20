@@ -33,6 +33,8 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
             var rows = new List<ProductionWeekScheduleItemViewModel>();
             if (selectedWeek != default)
             {
+                var selectedWeekStatus = GetScheduleStatus(selectedWeek, currentMondayUtc);
+
                 rows = await _dbContext.WorkShifts
                     .Where(s => s.WeekStartDate.Date == selectedWeek)
                     .GroupBy(s => s.EmployeeUserId)
@@ -50,7 +52,7 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
                             EmployeeName = u.DisplayName ?? u.Email ?? u.UserName ?? g.EmployeeUserId,
                             EmployeeEmail = u.Email ?? u.UserName ?? string.Empty,
                             TotalHours = g.ShiftCount * ShiftDuration.TotalHours,
-                            Status = g.ShiftCount == 6 ? "Complete" : "Pending"
+                            Status = selectedWeekStatus
                         })
                     .OrderBy(r => r.EmployeeName)
                     .ToListAsync();
@@ -85,7 +87,7 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
 
         foreach (var summary in weeklySummaries)
         {
-            summary.Status = Math.Abs(summary.TotalHours - 36) < 0.001 ? "Complete" : "Pending";
+            summary.Status = GetScheduleStatus(summary.WeekStartUtc, currentMondayUtc);
             summary.CanEdit = summary.WeekStartUtc >= currentMondayUtc;
         }
 
@@ -424,6 +426,21 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
         var date = dateUtc.Date;
         var diff = ((int)date.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
         return date.AddDays(-diff);
+    }
+
+    private static string GetScheduleStatus(DateTime weekStartUtc, DateTime currentMondayUtc)
+    {
+        if (weekStartUtc < currentMondayUtc)
+        {
+            return "Completed";
+        }
+
+        if (weekStartUtc == currentMondayUtc)
+        {
+            return "Ongoing";
+        }
+
+        return "Scheduled";
     }
 }
 
