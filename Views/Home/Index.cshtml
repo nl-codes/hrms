@@ -59,6 +59,18 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="dashboard-card h-100">
+                                <h2>Financial Integration</h2>
+                                <p>Generate payroll summaries and export FIS-ready monthly payroll files.</p>
+                                <div class="d-grid gap-2">
+                                    <a class="btn btn-primary" asp-controller="Reports" asp-action="Payroll">View Work Hours Report</a>
+                                    <a class="btn btn-outline-dark" asp-controller="Reports" asp-action="ExportPayrollToCsv"
+                                       asp-route-month="@DateTime.UtcNow.ToString("yyyy-MM-dd")">Export Payroll for FIS</a>
+                                </div>
+                            </div>
+                        </div>
                     }
 
                     @if (isApplicant)

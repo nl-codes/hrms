@@ -34,6 +34,9 @@ namespace HRMS.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("longtext");
 
+                    b.Property<decimal>("DefaultHourlyRate")
+                        .HasColumnType("decimal(65,30)");
+
                     b.Property<string>("DisplayName")
                         .HasColumnType("longtext");
 
