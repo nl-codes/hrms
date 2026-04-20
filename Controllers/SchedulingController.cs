@@ -262,6 +262,43 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = Roles.Employee)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteMySchedule(DateTime weekStartUtc)
+    {
+        var normalizedWeekStart = GetWeekStartMonday(weekStartUtc.Date);
+        var currentMondayUtc = GetWeekStartMonday(DateTime.UtcNow.Date);
+
+        if (normalizedWeekStart < currentMondayUtc)
+        {
+            TempData["ErrorMessage"] = "Past schedules cannot be deleted.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var weekShifts = await _dbContext.WorkShifts
+            .Where(s => s.EmployeeUserId == currentUserId && s.WeekStartDate.Date == normalizedWeekStart)
+            .ToListAsync();
+
+        if (weekShifts.Count == 0)
+        {
+            TempData["ErrorMessage"] = "No schedule found for the selected week.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _dbContext.WorkShifts.RemoveRange(weekShifts);
+        await _dbContext.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Weekly schedule deleted successfully.";
+        return RedirectToAction(nameof(Index));
+    }
+
     [Authorize(Roles = Roles.Employee + "," + Roles.ProductionManager)]
     [HttpGet]
     public IActionResult MySchedule()

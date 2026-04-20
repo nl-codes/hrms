@@ -83,6 +83,13 @@
                 @if (!Model.IsReadOnly)
                 {
                     <button type="submit" id="submitSchedule" class="btn btn-primary">Save Week Schedule</button>
+                    @if (User.IsInRole("Employee"))
+                    {
+                        <button type="submit" class="btn btn-outline-danger delete-schedule-btn"
+                                formaction="@Url.Action("DeleteMySchedule", "Scheduling")" formmethod="post">
+                            Delete Schedule
+                        </button>
+                    }
                 }
             </div>
         </div>
@@ -148,6 +155,19 @@
 
             form.addEventListener('change', updateSummary);
             updateSummary();
+        })();
+    </script>
+
+    <script>
+        (() => {
+            const warningMessage = 'Delete this schedule? This cannot be undone and may affect payroll.';
+            document.querySelectorAll('.delete-schedule-btn').forEach(button => {
+                button.addEventListener('click', event => {
+                    if (!window.confirm(warningMessage)) {
+                        event.preventDefault();
+                    }
+                });
+            });
         })();
     </script>
 }

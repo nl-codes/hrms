@@ -132,10 +132,22 @@
                                     class="badge @(week.Status == "Completed" ? "text-bg-success" : week.Status == "Ongoing" ? "text-bg-warning" : "text-bg-secondary")">@week.Status</span>
                                 </td>
                                 <td class="text-end">
-                                    <a class="btn btn-sm @(week.CanEdit ? "btn-outline-primary" : "btn-outline-secondary")"
-                                           asp-action="Edit" asp-route-weekStart="@week.WeekStartUtc.ToString("yyyy-MM-dd")">
-                                        @(week.CanEdit ? "Edit" : "View")
-                                    </a>
+                                    <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
+                                        <a class="btn btn-sm @(week.CanEdit ? "btn-outline-primary" : "btn-outline-secondary")"
+                                               asp-action="Edit" asp-route-weekStart="@week.WeekStartUtc.ToString("yyyy-MM-dd")">
+                                            @(week.CanEdit ? "Edit" : "View")
+                                        </a>
+                                        @if (week.CanEdit)
+                                        {
+                                            <form asp-action="DeleteMySchedule" method="post" class="d-inline delete-schedule-form">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="weekStartUtc" value="@week.WeekStartUtc.ToString("yyyy-MM-dd")" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger delete-schedule-btn">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -145,3 +157,18 @@
         }
     }
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const warningMessage = 'Delete this schedule? This cannot be undone and may affect payroll.';
+            document.querySelectorAll('.delete-schedule-form').forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!window.confirm(warningMessage)) {
+                        event.preventDefault();
+                    }
+                });
+            });
+        })();
+    </script>
+}
