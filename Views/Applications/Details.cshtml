@@ -10,7 +10,7 @@
             <h1 class="h3 mb-1">Application #@Model.Id</h1>
             <div class="text-muted">Applicant: @Model.ApplicantEmail</div>
         </div>
-        <span class="badge text-bg-secondary">@Model.Status</span>
+        <partial name="_ApplicationStatusBadge" model="Model.Status" />
     </div>
 
     @if (TempData["SuccessMessage"] is string success)

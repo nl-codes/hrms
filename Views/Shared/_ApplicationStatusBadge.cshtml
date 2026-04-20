@@ -1,0 +1,14 @@
+@model ApplicationStatus
+
+@{
+    var badgeClass = Model switch
+    {
+        ApplicationStatus.Applied => "text-bg-info",
+        ApplicationStatus.Screened => "text-bg-warning",
+        ApplicationStatus.Rejected => "text-bg-danger",
+        ApplicationStatus.Hired => "text-bg-success",
+        _ => "text-bg-secondary"
+    };
+}
+
+<span class="badge @badgeClass">@Model</span>

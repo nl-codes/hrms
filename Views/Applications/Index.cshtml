@@ -14,53 +14,60 @@
 
     <ul class="nav nav-tabs mb-3">
         <li class="nav-item">
-            <a class="nav-link @(Model.ActiveTab == "all" ? "active" : "")" asp-action="Index" asp-route-tab="all">All (@Model.AllCount)</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(Model.ActiveTab == "screened" ? "active" : "")" asp-action="Index" asp-route-tab="screened">Screened (@Model.ScreenedCount)</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(Model.ActiveTab == "rejected" ? "active" : "")" asp-action="Index" asp-route-tab="rejected">Rejected (@Model.RejectedCount)</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(Model.ActiveTab == "hired" ? "active" : "")" asp-action="Index" asp-route-tab="hired">Hired (@Model.HiredCount)</a>
-        </li>
-    </ul>
+            <a class="nav-link @(Model.ActiveTab == "all" ? "active" : "")" asp-action="Index" asp-route-tab="all">All
+                (@Model.AllCount)</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Model.ActiveTab == "screened" ? "active" : "")" asp-action="Index"
+                   asp-route-tab="screened">Screened (@Model.ScreenedCount)</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Model.ActiveTab == "rejected" ? "active" : "")" asp-action="Index"
+                   asp-route-tab="rejected">Rejected (@Model.RejectedCount)</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(Model.ActiveTab == "hired" ? "active" : "")" asp-action="Index"
+                   asp-route-tab="hired">Hired (@Model.HiredCount)</a>
+            </li>
+        </ul>
 
-    @if (!Model.Applications.Any())
-    {
-        <div class="alert alert-info mb-0">No applications found for this tab.</div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Applicant</th>
-                        <th>Job</th>
-                        <th>Status</th>
-                        <th>Applied</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var app in Model.Applications)
-                    {
+        @if (!Model.Applications.Any())
+        {
+            <div class="alert alert-info mb-0">No applications found for this tab.</div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
                         <tr>
-                            <td>#@app.Id</td>
-                            <td>@app.ApplicantEmail</td>
-                            <td>@app.JobTitle</td>
-                            <td><span class="badge text-bg-secondary">@app.Status</span></td>
-                            <td>@app.AppliedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
-                            <td class="text-end">
-                                <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@app.Id">Details</a>
-                            </td>
+                            <th>Id</th>
+                            <th>Applicant</th>
+                            <th>Job</th>
+                            <th>Status</th>
+                            <th>Applied</th>
+                            <th class="text-end">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
-</div>
+                    </thead>
+                    <tbody>
+                        @foreach (var app in Model.Applications)
+                        {
+                            <tr>
+                                <td>#@app.Id</td>
+                                <td>@app.ApplicantEmail</td>
+                                <td>@app.JobTitle</td>
+                                <td>
+                                    <partial name="_ApplicationStatusBadge" model="app.Status" />
+                                </td>
+                                <td>@app.AppliedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-primary" asp-action="Details"
+                                       asp-route-id="@app.Id">Details</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>

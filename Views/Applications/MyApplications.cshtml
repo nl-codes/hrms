@@ -37,7 +37,7 @@
                         <tr>
                             <td>#@app.Id</td>
                             <td>@app.JobTitle</td>
-                            <td><span class="badge text-bg-secondary">@app.Status</span></td>
+                            <td><partial name="_ApplicationStatusBadge" model="app.Status" /></td>
                             <td>@app.AppliedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
                             <td>@(app.ScreenedAtUtc?.ToString("yyyy-MM-dd HH:mm") + " UTC" ?? "-")</td>
                             <td>@(app.HiredAtUtc?.ToString("yyyy-MM-dd HH:mm") + " UTC" ?? "-")</td>
