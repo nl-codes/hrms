@@ -9,6 +9,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<JobPosting> JobPostings => Set<JobPosting>();
     public DbSet<JobApplication> JobApplications => Set<JobApplication>();
     public DbSet<Instructor> Instructors => Set<Instructor>();
+    public DbSet<TrainingSession> TrainingSessions => Set<TrainingSession>();
+    public DbSet<TrainingEnrollment> TrainingEnrollments => Set<TrainingEnrollment>();
     public DbSet<WorkShift> WorkShifts => Set<WorkShift>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -33,6 +35,28 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<Instructor>()
             .HasIndex(i => i.UserId)
+            .IsUnique();
+
+        builder.Entity<TrainingSession>()
+            .HasOne(s => s.Instructor)
+            .WithMany()
+            .HasForeignKey(s => s.InstructorId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<TrainingEnrollment>()
+            .HasOne(e => e.TrainingSession)
+            .WithMany(s => s.Enrollments)
+            .HasForeignKey(e => e.TrainingSessionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<TrainingEnrollment>()
+            .HasOne(e => e.EmployeeUser)
+            .WithMany()
+            .HasForeignKey(e => e.EmployeeUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<TrainingEnrollment>()
+            .HasIndex(e => new { e.TrainingSessionId, e.EmployeeUserId })
             .IsUnique();
 
         builder.Entity<WorkShift>()

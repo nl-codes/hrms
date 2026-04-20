@@ -1,0 +1,78 @@
+@model IReadOnlyList<EmployeeTrainingSessionListItemViewModel>
+
+@{
+    ViewData["Title"] = "All Training Sessions";
+}
+
+<div class="dashboard-card">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h1 class="h3 mb-1">All Training Sessions</h1>
+            <p class="text-muted mb-0">Sign up for active sessions relevant to your role development.</p>
+        </div>
+        <a class="btn btn-outline-secondary" asp-action="MySessions">My Training Sessions</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="alert alert-success">@success</div>
+    }
+
+    @if (TempData["ErrorMessage"] is string error)
+    {
+        <div class="alert alert-warning">@error</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mb-0">No active training sessions available right now.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Instructor</th>
+                        <th>Date</th>
+                        <th>Enrollment</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var session in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@session.Title</div>
+                                <div class="small text-muted">@session.Description</div>
+                            </td>
+                            <td>@session.InstructorName</td>
+                            <td>@session.SessionDateUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                            <td>@session.EnrollmentCount / @session.MaxEnrollment</td>
+                            <td class="text-end">
+                                @if (session.IsEnrolled)
+                                {
+                                    <span class="badge text-bg-secondary">Already Enrolled</span>
+                                }
+                                else if (session.IsFull)
+                                {
+                                    <span class="badge text-bg-warning">Full</span>
+                                }
+                                else
+                                {
+                                    <form asp-action="Enroll" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="sessionId" value="@session.Id" />
+                                        <button type="submit" class="btn btn-sm btn-primary">Sign Up</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

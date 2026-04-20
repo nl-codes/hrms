@@ -1,0 +1,56 @@
+@model IReadOnlyList<TrainingInstructorListItemViewModel>
+
+@{
+    ViewData["Title"] = "Training Reports";
+}
+
+<div class="dashboard-card">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h1 class="h3 mb-1">Training Reports</h1>
+            <p class="text-muted mb-0">Monitor instructor sessions and attendance outcomes.</p>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mb-0">No training sessions available.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Instructor</th>
+                        <th>Date</th>
+                        <th>Enrollment</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var session in Model)
+                    {
+                        <tr>
+                            <td>@session.Title</td>
+                            <td>@session.InstructorName</td>
+                            <td>@session.SessionDateUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                            <td>@session.EnrollmentCount / @session.MaxEnrollment</td>
+                            <td>
+                                <span class="badge @(session.IsActive ? "text-bg-success" : "text-bg-secondary")">
+                                    @(session.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@session.Id">View
+                                    Attendance</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>

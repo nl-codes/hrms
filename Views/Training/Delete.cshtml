@@ -1,0 +1,29 @@
+@model TrainingDeleteViewModel
+
+@{
+    ViewData["Title"] = "Delete Training Session";
+}
+
+<div class="dashboard-card mx-auto" style="max-width: 760px;">
+    <h1 class="h3 mb-3 text-danger">Delete Training Session</h1>
+
+    <p>Are you sure you want to delete this session?</p>
+
+    <dl class="row mb-4">
+        <dt class="col-sm-4">Title</dt>
+        <dd class="col-sm-8">@Model.Title</dd>
+
+        <dt class="col-sm-4">Date</dt>
+        <dd class="col-sm-8">@Model.SessionDateUtc.ToString("yyyy-MM-dd HH:mm") UTC</dd>
+
+        <dt class="col-sm-4">Enrollment</dt>
+        <dd class="col-sm-8">@Model.EnrollmentCount / @Model.MaxEnrollment</dd>
+    </dl>
+
+    <form asp-action="Delete" method="post" class="d-flex gap-2">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a class="btn btn-outline-secondary" asp-action="InstructorIndex">Cancel</a>
+    </form>
+</div>

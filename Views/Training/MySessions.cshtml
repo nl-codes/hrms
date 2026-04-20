@@ -1,0 +1,51 @@
+@model IReadOnlyList<MyTrainingSessionItemViewModel>
+
+@{
+    ViewData["Title"] = "My Training Sessions";
+}
+
+<div class="dashboard-card">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h1 class="h3 mb-1">My Training Sessions</h1>
+            <p class="text-muted mb-0">Track enrollment and attendance status across your sessions.</p>
+        </div>
+        <a class="btn btn-outline-secondary" asp-action="AllSessions">View All Training Sessions</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mb-0">You are not enrolled in any training sessions yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Instructor</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var session in Model)
+                    {
+                        <tr>
+                            <td>@session.Title</td>
+                            <td>@session.InstructorName</td>
+                            <td>@session.SessionDateUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                            <td>
+                                <span
+                                    class="badge @(session.Status == EnrollmentStatus.Completed ? "text-bg-success" : session.Status == EnrollmentStatus.Absent ? "text-bg-danger" : "text-bg-info")">
+                                    @session.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

@@ -206,6 +206,75 @@ namespace HRMS.Migrations
                     b.ToTable("JobPostings");
                 });
 
+            modelBuilder.Entity("HRMS.Models.TrainingEnrollment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("EmployeeUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("varchar(450)");
+
+                    b.Property<DateTime>("EnrolledAtUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TrainingSessionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeUserId");
+
+                    b.HasIndex("TrainingSessionId", "EmployeeUserId")
+                        .IsUnique();
+
+                    b.ToTable("TrainingEnrollments");
+                });
+
+            modelBuilder.Entity("HRMS.Models.TrainingSession", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<int>("InstructorId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("MaxEnrollment")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SessionDateUtc")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("varchar(160)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InstructorId");
+
+                    b.ToTable("TrainingSessions");
+                });
+
             modelBuilder.Entity("HRMS.Models.WorkShift", b =>
                 {
                     b.Property<int>("Id")
@@ -392,6 +461,36 @@ namespace HRMS.Migrations
                     b.Navigation("JobPosting");
                 });
 
+            modelBuilder.Entity("HRMS.Models.TrainingEnrollment", b =>
+                {
+                    b.HasOne("HRMS.Data.ApplicationUser", "EmployeeUser")
+                        .WithMany()
+                        .HasForeignKey("EmployeeUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Models.TrainingSession", "TrainingSession")
+                        .WithMany("Enrollments")
+                        .HasForeignKey("TrainingSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmployeeUser");
+
+                    b.Navigation("TrainingSession");
+                });
+
+            modelBuilder.Entity("HRMS.Models.TrainingSession", b =>
+                {
+                    b.HasOne("HRMS.Models.Instructor", "Instructor")
+                        .WithMany()
+                        .HasForeignKey("InstructorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Instructor");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -446,6 +545,11 @@ namespace HRMS.Migrations
             modelBuilder.Entity("HRMS.Models.JobPosting", b =>
                 {
                     b.Navigation("Applications");
+                });
+
+            modelBuilder.Entity("HRMS.Models.TrainingSession", b =>
+                {
+                    b.Navigation("Enrollments");
                 });
 #pragma warning restore 612, 618
         }
