@@ -1,0 +1,88 @@
+@model HiringFunnelReportViewModel
+
+@{
+    ViewData["Title"] = "Hiring Funnel Report";
+}
+
+<div class="dashboard-shell report-page">
+    <div class="dashboard-card d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h1 class="h3 mb-1">Hiring Funnel Report</h1>
+            <p class="text-muted mb-0">Monitor applications, screening outcomes, and final hiring conversion.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 no-print">
+            <a class="btn btn-outline-secondary" asp-action="Index">Back to Dashboard</a>
+            <button type="button" class="btn btn-outline-dark" onclick="window.print()">Print Report</button>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-3">
+            <div class="dashboard-card h-100">
+                <div class="text-muted small">Total Applications</div>
+                <div class="display-6 fw-semibold">@Model.TotalApplications</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="dashboard-card h-100">
+                <div class="text-muted small">Screened</div>
+                <div class="display-6 fw-semibold">@Model.ScreenedCount</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="dashboard-card h-100">
+                <div class="text-muted small">Rejected</div>
+                <div class="display-6 fw-semibold">@Model.RejectedCount</div>
+                <div class="text-muted small">Automated Rejections: @Model.AutomatedRejectedCount</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="dashboard-card h-100">
+                <div class="text-muted small">Hired</div>
+                <div class="display-6 fw-semibold">@Model.HiredCount</div>
+                <div class="text-muted small">Acceptance Rate: @Model.AcceptanceRate.ToString("0.##")%</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <h2 class="h5">Funnel Breakdown</h2>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Stage</th>
+                        <th>Count</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total Applications</td>
+                        <td>@Model.TotalApplications</td>
+                        <td>All applications received.</td>
+                    </tr>
+                    <tr>
+                        <td>Screened</td>
+                        <td>@Model.ScreenedCount</td>
+                        <td>Passed automated checks and waiting manager decision.</td>
+                    </tr>
+                    <tr>
+                        <td>Rejected</td>
+                        <td>@Model.RejectedCount</td>
+                        <td>@Model.AutomatedRejectedCount automated rejections.</td>
+                    </tr>
+                    <tr>
+                        <td>Hired</td>
+                        <td>@Model.HiredCount</td>
+                        <td>Accepted for employment.</td>
+                    </tr>
+                    <tr class="table-light">
+                        <td>Acceptance Rate</td>
+                        <td colspan="2">@Model.AcceptanceRate.ToString("0.##")% (Hired / Total Applications)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

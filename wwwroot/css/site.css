@@ -112,3 +112,43 @@ body {
 .slot-status.text-success {
     font-weight: 600;
 }
+
+.report-page .display-6 {
+    font-size: 1.75rem;
+}
+
+@media print {
+    body {
+        margin-bottom: 0;
+        background: #fff;
+    }
+
+    header,
+    footer,
+    .no-print {
+        display: none !important;
+    }
+
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0;
+    }
+
+    .dashboard-card {
+        background: #fff;
+        border: 1px solid #d1d5db;
+        box-shadow: none;
+        backdrop-filter: none;
+        break-inside: avoid;
+    }
+
+    .table {
+        font-size: 0.88rem;
+    }
+
+    .table th,
+    .table td {
+        border-color: #c7c7c7 !important;
+    }
+}

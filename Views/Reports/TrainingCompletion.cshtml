@@ -1,0 +1,99 @@
+@model TrainingCompletionReportViewModel
+
+@{
+    ViewData["Title"] = "Training Completion Report";
+}
+
+<div class="dashboard-shell report-page">
+    <div class="dashboard-card d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h1 class="h3 mb-1">Training Completion Report</h1>
+            <p class="text-muted mb-0">Track enrollments, completions, and employees who need follow-up training.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 no-print">
+            <a class="btn btn-outline-secondary" asp-action="Index">Back to Dashboard</a>
+            <button type="button" class="btn btn-outline-dark" onclick="window.print()">Print Report</button>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <form asp-action="TrainingCompletion" method="get" class="d-flex align-items-center gap-2 mb-3 no-print">
+            <input type="hidden" name="showIncompleteOnly" value="false" />
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="showIncompleteOnly" name="showIncompleteOnly" value="true" checked="@Model.ShowIncompleteOnly" />
+                <label class="form-check-label" for="showIncompleteOnly">Show Incomplete/Absent Only</label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+        </form>
+
+        @if (!Model.Rows.Any())
+        {
+            <div class="alert alert-info mb-0">No employee training records match the selected filter.</div>
+        }
+        else
+        {
+            <div class="table-responsive mb-4">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Employee Name</th>
+                            <th>Total Sessions Enrolled</th>
+                            <th>Sessions Completed</th>
+                            <th>Completion Rate (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Rows)
+                        {
+                            <tr class="@(row.IncompleteOrAbsentCount > 0 ? "table-warning" : string.Empty)">
+                                <td>@row.EmployeeName</td>
+                                <td>@row.TotalSessionsEnrolled</td>
+                                <td>@row.SessionsCompleted</td>
+                                <td>@row.CompletionRate.ToString("0.##")%</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @if (Model.ShowIncompleteOnly)
+        {
+            <h2 class="h5">Incomplete/Absent Records</h2>
+            @if (!Model.IncompleteRecords.Any())
+            {
+                <div class="alert alert-success mb-0">No incomplete or absent records were found.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Session</th>
+                                <th>Session Date (UTC)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var record in Model.IncompleteRecords)
+                            {
+                                <tr>
+                                    <td>@record.EmployeeName</td>
+                                    <td>@record.SessionTitle</td>
+                                    <td>@record.SessionDateUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>
+                                        <span class="badge @(record.Status == EnrollmentStatus.Absent ? "text-bg-danger" : "text-bg-warning text-dark")">
+                                            @record.Status
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </div>
+</div>

@@ -1,0 +1,67 @@
+@model ReportsDashboardViewModel
+
+@{
+    ViewData["Title"] = "Reports Dashboard";
+}
+
+<div class="dashboard-shell report-page">
+    <div class="dashboard-card d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h1 class="h3 mb-1">HR Admin Reports Dashboard</h1>
+            <p class="text-muted mb-0">Workforce efficiency, training progress, and hiring metrics for We Build Stuff.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 no-print">
+            <a class="btn btn-outline-primary" asp-action="WorkHours" asp-route-periodType="week">Work Hours Report</a>
+            <a class="btn btn-outline-primary" asp-action="TrainingCompletion">Training Completion</a>
+            <a class="btn btn-outline-primary" asp-action="HiringFunnel">Hiring Funnel</a>
+            <a class="btn btn-primary" asp-action="ExportPayrollToCsv" asp-route-month="@DateTime.UtcNow.ToString("yyyy-MM-dd")">Export Payroll CSV</a>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Print Report</button>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6 col-xl-3">
+            <div class="dashboard-card h-100">
+                <div class="text-muted small">Active Employees</div>
+                <div class="display-6 fw-semibold">@Model.ActiveEmployeeCount</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="dashboard-card h-100">
+                <div class="text-muted small">Open Job Postings</div>
+                <div class="display-6 fw-semibold">@Model.OpenJobPostingCount</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="dashboard-card h-100">
+                <div class="text-muted small">Training Sessions Completed (This Month)</div>
+                <div class="display-6 fw-semibold">@Model.CompletedTrainingSessionsThisMonth</div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="dashboard-card h-100">
+                <div class="text-muted small">Applicants (Hired vs Rejected)</div>
+                @if (Model.TotalDecidedApplicants == 0)
+                {
+                    <div class="fw-semibold">No decided applications yet</div>
+                }
+                else
+                {
+                    <div class="fw-semibold">Hired: @Model.HiredPercentage.ToString("0.##")% (@Model.HiredApplicantCount)</div>
+                    <div class="fw-semibold">Rejected: @Model.RejectedPercentage.ToString("0.##")% (@Model.RejectedApplicantCount)</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <h2 class="h5">Reports</h2>
+        <div class="d-flex flex-wrap gap-2 no-print">
+            <a class="btn btn-primary" asp-action="WorkHours" asp-route-periodType="week">Weekly Work Hours</a>
+            <a class="btn btn-outline-primary" asp-action="WorkHours" asp-route-periodType="month">Monthly Work Hours</a>
+            <a class="btn btn-outline-secondary" asp-action="TrainingCompletion">Training Completion Report</a>
+            <a class="btn btn-outline-dark" asp-action="HiringFunnel">Hiring Funnel Report</a>
+            <a class="btn btn-outline-dark" asp-action="Payroll">Payroll Report</a>
+        </div>
+    </div>
+</div>

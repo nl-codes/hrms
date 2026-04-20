@@ -13,6 +13,7 @@
                 completions.</p>
             </div>
             <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-secondary no-print" asp-action="Index">Reports Dashboard</a>
                 <a class="btn btn-outline-primary" asp-action="Payroll"
                        asp-route-startDate="@Model.CurrentMonthStart.ToString("yyyy-MM-dd")"
                        asp-route-endDate="@Model.CurrentMonthEnd.ToString("yyyy-MM-dd")">
@@ -20,6 +21,7 @@
                 </a>
                 <a class="btn btn-primary" asp-action="ExportPayrollToCsv" asp-route-month="@currentMonthToken">Export
                     Payroll for FIS</a>
+                <button type="button" class="btn btn-outline-dark no-print" onclick="window.print()">Print Report</button>
                 </div>
             </div>
 
