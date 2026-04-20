@@ -25,6 +25,11 @@
             <input asp-for="BaseHourlyRate" class="form-control" />
             <span asp-validation-for="BaseHourlyRate" class="text-danger"></span>
         </div>
+        <div class="col-md-3">
+            <label asp-for="OpenPositions" class="form-label"></label>
+            <input asp-for="OpenPositions" class="form-control" min="1" />
+            <span asp-validation-for="OpenPositions" class="text-danger"></span>
+        </div>
         <div class="col-12">
             <label asp-for="Description" class="form-label"></label>
             <textarea asp-for="Description" class="form-control" rows="5"></textarea>

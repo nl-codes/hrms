@@ -1,0 +1,16 @@
+@model HiringCompletedViewModel
+
+@{
+    ViewData["Title"] = "Hiring Completed";
+}
+
+<div class="dashboard-card mx-auto" style="max-width: 760px;">
+    <h1 class="h3 mb-3">Hiring Completed</h1>
+    <p class="mb-2">Applications are no longer being accepted for <strong>@Model.Title</strong>.</p>
+    <p class="text-muted mb-4">This position reached its hiring target (@Model.HiredCount of @Model.OpenPositions).</p>
+
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Browse Other Jobs</a>
+        <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Dashboard</a>
+    </div>
+</div>

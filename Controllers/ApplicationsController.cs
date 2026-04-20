@@ -18,10 +18,29 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
     [HttpGet]
     public async Task<IActionResult> Apply(int id)
     {
-        var job = await _dbContext.JobPostings.FirstOrDefaultAsync(j => j.Id == id && j.IsActive);
+        var job = await _dbContext.JobPostings.FirstOrDefaultAsync(j => j.Id == id);
         if (job is null)
         {
-            return NotFound("Job posting not found or inactive.");
+            return NotFound("Job posting not found.");
+        }
+
+        var openPositions = NormalizeOpenPositions(job);
+        var hiredCount = await GetHiredCountForJobAsync(job.Id);
+        if (!job.IsActive || hiredCount >= openPositions)
+        {
+            if (job.IsActive && hiredCount >= openPositions)
+            {
+                job.IsActive = false;
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return View("HiringCompleted", new HiringCompletedViewModel
+            {
+                JobPostingId = job.Id,
+                Title = job.Title,
+                OpenPositions = openPositions,
+                HiredCount = hiredCount
+            });
         }
 
         return View(new ApplyForJobViewModel(job));
@@ -32,10 +51,29 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Apply(ApplyForJobViewModel model)
     {
-        var job = await _dbContext.JobPostings.FirstOrDefaultAsync(j => j.Id == model.JobPostingId && j.IsActive);
+        var job = await _dbContext.JobPostings.FirstOrDefaultAsync(j => j.Id == model.JobPostingId);
         if (job is null)
         {
-            return NotFound("Job posting not found or inactive.");
+            return NotFound("Job posting not found.");
+        }
+
+        var openPositions = NormalizeOpenPositions(job);
+        var hiredCount = await GetHiredCountForJobAsync(job.Id);
+        if (!job.IsActive || hiredCount >= openPositions)
+        {
+            if (job.IsActive && hiredCount >= openPositions)
+            {
+                job.IsActive = false;
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return View("HiringCompleted", new HiringCompletedViewModel
+            {
+                JobPostingId = job.Id,
+                Title = job.Title,
+                OpenPositions = openPositions,
+                HiredCount = hiredCount
+            });
         }
 
         if (!ModelState.IsValid)
@@ -44,6 +82,7 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             model.Description = job.Description;
             model.RequiredExperienceYears = job.RequiredExperienceYears;
             model.RequiredSkillsCsv = job.RequiredSkillsCsv;
+            model.OpenPositions = openPositions;
             return View(model);
         }
 
@@ -81,10 +120,23 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             return BadRequest(ModelState);
         }
 
-        var job = await _dbContext.JobPostings.FirstOrDefaultAsync(j => j.Id == request.JobPostingId && j.IsActive);
+        var job = await _dbContext.JobPostings.FirstOrDefaultAsync(j => j.Id == request.JobPostingId);
         if (job is null)
         {
-            return NotFound("Job posting not found or inactive.");
+            return NotFound("Job posting not found.");
+        }
+
+        var openPositions = NormalizeOpenPositions(job);
+        var hiredCount = await GetHiredCountForJobAsync(job.Id);
+        if (!job.IsActive || hiredCount >= openPositions)
+        {
+            if (job.IsActive && hiredCount >= openPositions)
+            {
+                job.IsActive = false;
+                await _dbContext.SaveChangesAsync();
+            }
+
+            return BadRequest(new { message = "Hiring is completed for this job posting." });
         }
 
         var userId = _userManager.GetUserId(User);
@@ -254,15 +306,39 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Hire(int applicationId)
     {
-        var application = await _dbContext.JobApplications.FirstOrDefaultAsync(a => a.Id == applicationId);
+        var application = await _dbContext.JobApplications
+            .Include(a => a.JobPosting)
+            .FirstOrDefaultAsync(a => a.Id == applicationId);
         if (application is null)
         {
             return NotFound("Application not found.");
         }
 
+        if (application.JobPosting is null)
+        {
+            return NotFound("Job posting not found for this application.");
+        }
+
+        var openPositions = NormalizeOpenPositions(application.JobPosting);
+        var hiredCountBefore = await GetHiredCountForJobAsync(application.JobPostingId);
+        if (hiredCountBefore >= openPositions)
+        {
+            application.JobPosting.IsActive = false;
+            await _dbContext.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Hiring is completed for this job posting.";
+            return RedirectToAction(nameof(Details), new { id = application.Id });
+        }
+
         if (application.Status == ApplicationStatus.Rejected)
         {
             return BadRequest("Rejected applicants cannot be hired.");
+        }
+
+        if (application.Status == ApplicationStatus.Hired)
+        {
+            TempData["SuccessMessage"] = "This applicant is already hired.";
+            return RedirectToAction(nameof(Details), new { id = application.Id });
         }
 
         var applicant = await _userManager.FindByIdAsync(application.ApplicantUserId);
@@ -284,10 +360,28 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
         application.Status = ApplicationStatus.Hired;
         application.HiredAtUtc = DateTime.UtcNow;
 
+        var hiredCountAfter = hiredCountBefore + 1;
+        if (hiredCountAfter >= openPositions)
+        {
+            application.JobPosting.IsActive = false;
+        }
+
         await _dbContext.SaveChangesAsync();
 
-        TempData["SuccessMessage"] = $"Application #{application.Id} hired and role changed to {Roles.Employee}.";
+        TempData["SuccessMessage"] = hiredCountAfter >= openPositions
+            ? $"Application #{application.Id} hired. Hiring is completed for this posting."
+            : $"Application #{application.Id} hired and role changed to {Roles.Employee}.";
         return RedirectToAction(nameof(Details), new { id = application.Id });
+    }
+
+    private static int NormalizeOpenPositions(JobPosting jobPosting)
+    {
+        return jobPosting.OpenPositions > 0 ? jobPosting.OpenPositions : 1;
+    }
+
+    private Task<int> GetHiredCountForJobAsync(int jobPostingId)
+    {
+        return _dbContext.JobApplications.CountAsync(a => a.JobPostingId == jobPostingId && a.Status == ApplicationStatus.Hired);
     }
 
     private static string NormalizeTab(string? tab)

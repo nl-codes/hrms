@@ -154,6 +154,9 @@ namespace HRMS.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)");
 
+                    b.Property<int>("OpenPositions")
+                        .HasColumnType("int");
+
                     b.Property<int>("RequiredExperienceYears")
                         .HasColumnType("int");
 

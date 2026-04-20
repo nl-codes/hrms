@@ -11,7 +11,7 @@
             <div class="text-muted">@Model.RequiredExperienceYears years experience required</div>
         </div>
         <span class="badge @(Model.IsActive ? "text-bg-success" : "text-bg-secondary")">@(Model.IsActive ? "Active" :
-                 "Closed")</span>
+                             "Closed")</span>
         </div>
 
         <p class="mb-4">@Model.Description</p>
@@ -19,6 +19,8 @@
         <dl class="row mb-4">
             <dt class="col-sm-4">Required Skills</dt>
             <dd class="col-sm-8">@Model.RequiredSkillsCsv</dd>
+            <dt class="col-sm-4">Open Positions</dt>
+            <dd class="col-sm-8">@Model.OpenPositions</dd>
             <dt class="col-sm-4">Hourly Rate</dt>
             <dd class="col-sm-8">@Model.BaseHourlyRate.ToString("C")</dd>
             <dt class="col-sm-4">Created</dt>
@@ -26,7 +28,14 @@
         </dl>
 
         <div class="d-flex gap-2">
-            <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply" asp-route-id="@Model.Id">Apply</a>
+            @if (Model.IsActive)
+            {
+                <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply" asp-route-id="@Model.Id">Apply</a>
+            }
+            else
+            {
+                <span class="btn btn-secondary disabled">Hiring Completed</span>
+            }
             <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
         </div>
     </div>

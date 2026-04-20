@@ -21,6 +21,7 @@
             <tr>
                 <th>Title</th>
                 <th>Experience</th>
+                <th>Openings</th>
                 <th>Skills</th>
                 <th>Status</th>
                 <th class="text-end">Actions</th>
@@ -35,10 +36,11 @@
                         <div class="small text-muted">Posted @job.CreatedAtUtc.ToString("yyyy-MM-dd")</div>
                     </td>
                     <td>@job.RequiredExperienceYears years</td>
+                    <td>@job.OpenPositions</td>
                     <td>@job.RequiredSkillsCsv</td>
                     <td>
                         <span class="badge @(job.IsActive ? "text-bg-success" : "text-bg-secondary")">@(job.IsActive ?
-                                        "Active" : "Closed")</span>
+                                                                    "Active" : "Closed")</span>
                         </td>
                         <td class="text-end">
                             <div class="btn-group btn-group-sm" role="group">
@@ -50,13 +52,27 @@
                                 }
                                 else if (User.IsInRole("Applicant"))
                                 {
-                                    <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply"
-                                       asp-route-id="@job.Id">Apply</a>
+                                    if (job.IsActive)
+                                    {
+                                        <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply"
+                                           asp-route-id="@job.Id">Apply</a>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-secondary disabled" aria-disabled="true">Hiring Completed</a>
+                                    }
                                 }
                                 else
                                 {
-                                    <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply"
-                                       asp-route-id="@job.Id">Apply</a>
+                                    if (job.IsActive)
+                                    {
+                                        <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply"
+                                           asp-route-id="@job.Id">Apply</a>
+                                    }
+                                    else
+                                    {
+                                        <a class="btn btn-secondary disabled" aria-disabled="true">Hiring Completed</a>
+                                    }
                                 }
                             </div>
                         </td>

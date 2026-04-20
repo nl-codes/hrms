@@ -18,6 +18,9 @@ public class JobPosting
     [Required, MaxLength(1000)]
     public string RequiredSkillsCsv { get; set; } = string.Empty;
 
+    [Range(1, 1000)]
+    public int OpenPositions { get; set; } = 1;
+
     public bool IsActive { get; set; } = true;
     public decimal BaseHourlyRate { get; set; }
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
