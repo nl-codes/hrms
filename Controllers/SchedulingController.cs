@@ -236,10 +236,20 @@ public class CreateShiftRequest
     public decimal HourlyRate { get; set; }
 }
 
-public class EmployeeScheduleViewModel(DateTime weekStartUtc, List<EmployeeShiftSlot> slots)
+public class EmployeeScheduleViewModel
 {
-    public DateTime WeekStartUtc { get; set; } = weekStartUtc;
-    public List<EmployeeShiftSlot> Slots { get; set; } = slots;
+    public DateTime WeekStartUtc { get; set; }
+    public List<EmployeeShiftSlot> Slots { get; set; } = [];
+
+    public EmployeeScheduleViewModel()
+    {
+    }
+
+    public EmployeeScheduleViewModel(DateTime weekStartUtc, List<EmployeeShiftSlot> slots)
+    {
+        WeekStartUtc = weekStartUtc;
+        Slots = slots;
+    }
 }
 
 public class EmployeeShiftSlot
