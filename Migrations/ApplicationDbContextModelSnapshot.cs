@@ -113,6 +113,11 @@ namespace HRMS.Migrations
                     b.Property<DateTime>("AppliedAtUtc")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int>("AttemptNumber")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<DateTime?>("HiredAtUtc")
                         .HasColumnType("datetime(6)");
 

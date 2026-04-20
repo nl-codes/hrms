@@ -20,6 +20,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(a => a.JobPostingId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Entity<JobApplication>()
+            .Property(a => a.AttemptNumber)
+            .HasDefaultValue(1);
+
         builder.Entity<WorkShift>()
             .HasIndex(s => new { s.EmployeeUserId, s.StartTimeUtc, s.EndTimeUtc });
     }

@@ -3,11 +3,14 @@ namespace HRMS.Models;
 public class ApplicantApplicationItemViewModel
 {
     public int Id { get; set; }
+    public int JobPostingId { get; set; }
     public string JobTitle { get; set; } = string.Empty;
     public ApplicationStatus Status { get; set; }
     public DateTime AppliedAtUtc { get; set; }
     public DateTime? ScreenedAtUtc { get; set; }
     public DateTime? HiredAtUtc { get; set; }
+    public bool CanEdit { get; set; }
+    public bool CanReapply { get; set; }
 }
 
 public class ApplicationReviewItemViewModel
@@ -37,15 +40,21 @@ public class ApplicationsReviewIndexViewModel
 public class ApplicationDetailsViewModel
 {
     public int Id { get; set; }
+    public int JobPostingId { get; set; }
     public string ApplicantUserId { get; set; } = string.Empty;
     public string ApplicantEmail { get; set; } = string.Empty;
     public string JobTitle { get; set; } = string.Empty;
     public string JobDescription { get; set; } = string.Empty;
     public int ApplicantExperienceYears { get; set; }
     public string ApplicantSkillsCsv { get; set; } = string.Empty;
+    public int AttemptNumber { get; set; }
     public ApplicationStatus Status { get; set; }
     public DateTime AppliedAtUtc { get; set; }
     public DateTime? ScreenedAtUtc { get; set; }
     public DateTime? HiredAtUtc { get; set; }
+    public bool CanEdit { get; set; }
+    public bool CanReapply { get; set; }
+    public bool CanScreen { get; set; }
+    public bool CanReject { get; set; }
     public bool CanHire { get; set; }
 }

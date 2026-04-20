@@ -18,6 +18,8 @@ public class JobApplication
     [Required, MaxLength(1000)]
     public string ApplicantSkillsCsv { get; set; } = string.Empty;
 
+    public int AttemptNumber { get; set; } = 1;
+
     public ApplicationStatus Status { get; set; } = ApplicationStatus.Applied;
     public DateTime AppliedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime? ScreenedAtUtc { get; set; }

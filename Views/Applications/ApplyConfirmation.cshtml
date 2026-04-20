@@ -8,7 +8,11 @@
     <h1 class="h3 mb-3">Application Submitted</h1>
     <p class="mb-1">Role: <strong>@Model.JobPosting?.Title</strong></p>
     <p class="mb-1">Status: <strong>@Model.Status</strong></p>
-    <p class="mb-4">Screened: @Model.ScreenedAtUtc?.ToString("yyyy-MM-dd HH:mm") UTC</p>
+    <p class="mb-4">Your application is now waiting for manager review.</p>
 
-    <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Back to Jobs</a>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Back to Jobs</a>
+        <a class="btn btn-outline-secondary" asp-controller="Applications" asp-action="Details"
+           asp-route-id="@Model.Id">View Application</a>
+    </div>
 </div>

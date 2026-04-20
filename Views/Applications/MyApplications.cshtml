@@ -29,18 +29,34 @@
                         <th>Applied</th>
                         <th>Screened</th>
                         <th>Hired</th>
+                        <th class="text-end">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var app in Model)
                     {
-                        <tr style="cursor: pointer;" onclick="location.href='@Url.Action("Details", new { id = app.Id })';">
+                        <tr>
                             <td>#@app.Id</td>
                             <td>@app.JobTitle</td>
-                            <td><partial name="_ApplicationStatusBadge" model="app.Status" /></td>
+                            <td>
+                                <partial name="_ApplicationStatusBadge" model="app.Status" />
+                            </td>
                             <td>@app.AppliedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
                             <td>@(app.ScreenedAtUtc?.ToString("yyyy-MM-dd HH:mm") + " UTC" ?? "-")</td>
                             <td>@(app.HiredAtUtc?.ToString("yyyy-MM-dd HH:mm") + " UTC" ?? "-")</td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                    <a class="btn btn-sm btn-outline-secondary" asp-action="Details"
+                                       asp-route-id="@app.Id">Details</a>
+                                    @if (app.CanReapply)
+                                    {
+                                        <a class="btn btn-sm btn-primary" asp-controller="Applications" asp-action="Apply"
+                                               asp-route-id="@app.JobPostingId">
+                                            Reapply
+                                        </a>
+                                    }
+                                </div>
+                            </td>
                         </tr>
                     }
                 </tbody>

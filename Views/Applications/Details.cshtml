@@ -18,9 +18,17 @@
         <div class="alert alert-success">@success</div>
     }
 
+    @if (TempData["ErrorMessage"] is string error)
+    {
+        <div class="alert alert-warning">@error</div>
+    }
+
     <dl class="row mb-4">
         <dt class="col-sm-4">Job Title</dt>
         <dd class="col-sm-8">@Model.JobTitle</dd>
+
+        <dt class="col-sm-4">Attempt</dt>
+        <dd class="col-sm-8">#@Model.AttemptNumber</dd>
 
         <dt class="col-sm-4">Job Description</dt>
         <dd class="col-sm-8">@Model.JobDescription</dd>
@@ -45,6 +53,22 @@
         @if (User.IsInRole("HiringManager"))
         {
             <a class="btn btn-outline-secondary" asp-action="Index">Back to Review</a>
+            @if (Model.CanScreen)
+            {
+                <form asp-action="Screen" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="applicationId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-primary">Screen Applicant</button>
+                </form>
+            }
+            @if (Model.CanReject)
+            {
+                <form asp-action="Reject" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="applicationId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-outline-danger">Reject Applicant</button>
+                </form>
+            }
             @if (Model.CanHire)
             {
                 <form asp-action="Hire" method="post" class="d-inline">
@@ -56,6 +80,12 @@
         }
         else
         {
+            @if (Model.CanReapply)
+            {
+                <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply" asp-route-id="@Model.JobPostingId">
+                    Reapply
+                </a>
+            }
             <a class="btn btn-outline-secondary" asp-action="MyApplications">Back to My Applications</a>
         }
     </div>

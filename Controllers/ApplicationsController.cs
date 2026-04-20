@@ -24,6 +24,43 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             return NotFound("Job posting not found.");
         }
 
+        var userId = _userManager.GetUserId(User);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var latestApplication = await GetLatestApplicationForUserAndJobAsync(userId, job.Id);
+        var applicationCount = await GetApplicationCountForUserAndJobAsync(userId, job.Id);
+
+        if (latestApplication is not null)
+        {
+            if (latestApplication.Status == ApplicationStatus.Rejected)
+            {
+                if (applicationCount >= 3)
+                {
+                    TempData["ErrorMessage"] = "You have reached the reapply limit for this job posting.";
+                    return RedirectToAction(nameof(Details), new { id = latestApplication.Id });
+                }
+
+                if (!job.IsActive)
+                {
+                    return View("HiringCompleted", new HiringCompletedViewModel
+                    {
+                        JobPostingId = job.Id,
+                        Title = job.Title,
+                        OpenPositions = NormalizeOpenPositions(job),
+                        HiredCount = await GetHiredCountForJobAsync(job.Id)
+                    });
+                }
+
+                return View(BuildApplyViewModel(job, latestApplication, isEditing: false, isReapply: true));
+            }
+
+            TempData["ErrorMessage"] = "You already have an active application for this job. You can reapply only if it is rejected.";
+            return RedirectToAction(nameof(Details), new { id = latestApplication.Id });
+        }
+
         var openPositions = NormalizeOpenPositions(job);
         var hiredCount = await GetHiredCountForJobAsync(job.Id);
         if (!job.IsActive || hiredCount >= openPositions)
@@ -57,6 +94,27 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             return NotFound("Job posting not found.");
         }
 
+        var userId = _userManager.GetUserId(User);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var latestApplication = await GetLatestApplicationForUserAndJobAsync(userId, job.Id);
+        var applicationCount = await GetApplicationCountForUserAndJobAsync(userId, job.Id);
+
+        if (latestApplication is not null && latestApplication.Status is ApplicationStatus.Applied or ApplicationStatus.Screened or ApplicationStatus.Hired)
+        {
+            TempData["ErrorMessage"] = "You already have an active application for this job. You can reapply only if it is rejected.";
+            return RedirectToAction(nameof(Details), new { id = latestApplication.Id });
+        }
+
+        if (latestApplication is not null && latestApplication.Status == ApplicationStatus.Rejected && applicationCount >= 3)
+        {
+            TempData["ErrorMessage"] = "You have reached the reapply limit for this job posting.";
+            return RedirectToAction(nameof(Details), new { id = latestApplication.Id });
+        }
+
         var openPositions = NormalizeOpenPositions(job);
         var hiredCount = await GetHiredCountForJobAsync(job.Id);
         if (!job.IsActive || hiredCount >= openPositions)
@@ -78,18 +136,10 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
 
         if (!ModelState.IsValid)
         {
-            model.Title = job.Title;
-            model.Description = job.Description;
-            model.RequiredExperienceYears = job.RequiredExperienceYears;
-            model.RequiredSkillsCsv = job.RequiredSkillsCsv;
-            model.OpenPositions = openPositions;
+            PopulateApplyViewModel(model, job);
+            model.IsReapply = latestApplication?.Status == ApplicationStatus.Rejected;
+            model.IsEditing = false;
             return View(model);
-        }
-
-        var userId = _userManager.GetUserId(User);
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return Unauthorized();
         }
 
         var application = new JobApplication
@@ -98,6 +148,7 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             ApplicantUserId = userId,
             ApplicantExperienceYears = model.ExperienceYears,
             ApplicantSkillsCsv = model.SkillsCsv,
+            AttemptNumber = applicationCount + 1,
             Status = ApplicationStatus.Applied,
             AppliedAtUtc = DateTime.UtcNow
         };
@@ -126,6 +177,25 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             return NotFound("Job posting not found.");
         }
 
+        var userId = _userManager.GetUserId(User);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var latestApplication = await GetLatestApplicationForUserAndJobAsync(userId, job.Id);
+        var applicationCount = await GetApplicationCountForUserAndJobAsync(userId, job.Id);
+
+        if (latestApplication is not null && latestApplication.Status is ApplicationStatus.Applied or ApplicationStatus.Screened or ApplicationStatus.Hired)
+        {
+            return BadRequest(new { message = "You already have an active application for this job. You can reapply only if it is rejected." });
+        }
+
+        if (latestApplication is not null && latestApplication.Status == ApplicationStatus.Rejected && applicationCount >= 3)
+        {
+            return BadRequest(new { message = "You have reached the reapply limit for this job posting." });
+        }
+
         var openPositions = NormalizeOpenPositions(job);
         var hiredCount = await GetHiredCountForJobAsync(job.Id);
         if (!job.IsActive || hiredCount >= openPositions)
@@ -139,18 +209,13 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             return BadRequest(new { message = "Hiring is completed for this job posting." });
         }
 
-        var userId = _userManager.GetUserId(User);
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return Unauthorized();
-        }
-
         var application = new JobApplication
         {
             JobPostingId = request.JobPostingId,
             ApplicantUserId = userId,
             ApplicantExperienceYears = request.ExperienceYears,
             ApplicantSkillsCsv = request.SkillsCsv,
+            AttemptNumber = applicationCount + 1,
             Status = ApplicationStatus.Applied,
             AppliedAtUtc = DateTime.UtcNow
         };
@@ -165,7 +230,8 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             application.Id,
             application.Status,
             application.AppliedAtUtc,
-            application.ScreenedAtUtc
+            application.ScreenedAtUtc,
+            application.AttemptNumber
         });
     }
 
@@ -194,18 +260,38 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             .Where(a => a.ApplicantUserId == userId)
             .Include(a => a.JobPosting)
             .OrderByDescending(a => a.AppliedAtUtc)
-            .Select(a => new ApplicantApplicationItemViewModel
-            {
-                Id = a.Id,
-                JobTitle = a.JobPosting != null ? a.JobPosting.Title : "Unknown",
-                Status = a.Status,
-                AppliedAtUtc = a.AppliedAtUtc,
-                ScreenedAtUtc = a.ScreenedAtUtc,
-                HiredAtUtc = a.HiredAtUtc
-            })
             .ToListAsync();
 
-        return View(applications);
+        var latestApplicationByJob = applications
+            .GroupBy(a => a.JobPostingId)
+            .ToDictionary(group => group.Key, group => group.OrderByDescending(a => a.AppliedAtUtc).ThenByDescending(a => a.Id).First());
+
+        var applicationCountByJob = applications
+            .GroupBy(a => a.JobPostingId)
+            .ToDictionary(group => group.Key, group => group.Count());
+
+        var viewModels = applications
+            .Select(a =>
+            {
+                var latest = latestApplicationByJob[a.JobPostingId];
+                var attemptCount = applicationCountByJob[a.JobPostingId];
+
+                return new ApplicantApplicationItemViewModel
+                {
+                    Id = a.Id,
+                    JobPostingId = a.JobPostingId,
+                    JobTitle = a.JobPosting != null ? a.JobPosting.Title : "Unknown",
+                    Status = a.Status,
+                    AppliedAtUtc = a.AppliedAtUtc,
+                    ScreenedAtUtc = a.ScreenedAtUtc,
+                    HiredAtUtc = a.HiredAtUtc,
+                    CanEdit = false,
+                    CanReapply = latest.Id == a.Id && a.Status == ApplicationStatus.Rejected && attemptCount < 3
+                };
+            })
+            .ToList();
+
+        return View(viewModels);
     }
 
     [Authorize(Roles = Roles.HiringManager)]
@@ -267,7 +353,7 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
         return View(viewModel);
     }
 
-    [AllowAnonymous]
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
@@ -281,24 +367,97 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
         }
 
         var applicant = await _userManager.FindByIdAsync(application.ApplicantUserId);
+        var currentUserId = _userManager.GetUserId(User);
+        var isApplicantOwner = !string.IsNullOrWhiteSpace(currentUserId) && currentUserId == application.ApplicantUserId;
+
+        if (!User.IsInRole(Roles.HiringManager) && !isApplicantOwner)
+        {
+            return Forbid();
+        }
+
+        var applicationCountForJob = await _dbContext.JobApplications
+            .CountAsync(a => a.ApplicantUserId == application.ApplicantUserId && a.JobPostingId == application.JobPostingId);
+
+        var latestApplication = await GetLatestApplicationForUserAndJobAsync(application.ApplicantUserId, application.JobPostingId);
+        var canEditOwnApplication = false;
+        var canReapplyOwnApplication = isApplicantOwner && latestApplication?.Id == application.Id && application.Status == ApplicationStatus.Rejected && applicationCountForJob < 3;
 
         var viewModel = new ApplicationDetailsViewModel
         {
             Id = application.Id,
+            JobPostingId = application.JobPostingId,
             ApplicantUserId = application.ApplicantUserId,
             ApplicantEmail = applicant?.Email ?? applicant?.UserName ?? application.ApplicantUserId,
             JobTitle = application.JobPosting?.Title ?? "Unknown",
             JobDescription = application.JobPosting?.Description ?? string.Empty,
             ApplicantExperienceYears = application.ApplicantExperienceYears,
             ApplicantSkillsCsv = application.ApplicantSkillsCsv,
+            AttemptNumber = application.AttemptNumber,
             Status = application.Status,
             AppliedAtUtc = application.AppliedAtUtc,
             ScreenedAtUtc = application.ScreenedAtUtc,
             HiredAtUtc = application.HiredAtUtc,
-            CanHire = application.Status != ApplicationStatus.Hired && application.Status != ApplicationStatus.Rejected
+            CanEdit = canEditOwnApplication,
+            CanReapply = canReapplyOwnApplication,
+            CanScreen = User.IsInRole(Roles.HiringManager) && application.Status == ApplicationStatus.Applied,
+            CanReject = User.IsInRole(Roles.HiringManager) && (application.Status == ApplicationStatus.Applied || application.Status == ApplicationStatus.Screened),
+            CanHire = User.IsInRole(Roles.HiringManager) && application.Status == ApplicationStatus.Screened
         };
 
         return View(viewModel);
+    }
+
+    [Authorize(Roles = Roles.HiringManager)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Screen(int applicationId)
+    {
+        var application = await _dbContext.JobApplications.FirstOrDefaultAsync(a => a.Id == applicationId);
+        if (application is null)
+        {
+            return NotFound("Application not found.");
+        }
+
+        if (application.Status == ApplicationStatus.Hired)
+        {
+            return BadRequest("Hired applicants cannot be screened.");
+        }
+
+        if (application.Status == ApplicationStatus.Rejected)
+        {
+            return BadRequest("Rejected applications cannot be screened.");
+        }
+
+        application.Status = ApplicationStatus.Screened;
+        application.ScreenedAtUtc = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = $"Application #{application.Id} screened successfully.";
+        return RedirectToAction(nameof(Details), new { id = application.Id });
+    }
+
+    [Authorize(Roles = Roles.HiringManager)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Reject(int applicationId)
+    {
+        var application = await _dbContext.JobApplications.FirstOrDefaultAsync(a => a.Id == applicationId);
+        if (application is null)
+        {
+            return NotFound("Application not found.");
+        }
+
+        if (application.Status == ApplicationStatus.Hired)
+        {
+            return BadRequest("Hired applicants cannot be rejected.");
+        }
+
+        application.Status = ApplicationStatus.Rejected;
+        application.ScreenedAtUtc = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = $"Application #{application.Id} rejected successfully.";
+        return RedirectToAction(nameof(Details), new { id = application.Id });
     }
 
     [Authorize(Roles = Roles.HiringManager)]
@@ -333,6 +492,11 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
         if (application.Status == ApplicationStatus.Rejected)
         {
             return BadRequest("Rejected applicants cannot be hired.");
+        }
+
+        if (application.Status != ApplicationStatus.Screened)
+        {
+            return BadRequest("Applicants must be screened before they can be hired.");
         }
 
         if (application.Status == ApplicationStatus.Hired)
@@ -374,20 +538,44 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
         return RedirectToAction(nameof(Details), new { id = application.Id });
     }
 
+    private ApplyForJobViewModel BuildApplyViewModel(JobPosting jobPosting, JobApplication application, bool isEditing, bool isReapply)
+    {
+        return new ApplyForJobViewModel(jobPosting)
+        {
+            ApplicationId = isEditing ? application.Id : null,
+            ExperienceYears = application.ApplicantExperienceYears,
+            SkillsCsv = application.ApplicantSkillsCsv,
+            IsEditing = isEditing,
+            IsReapply = isReapply
+        };
+    }
+
+    private static void PopulateApplyViewModel(ApplyForJobViewModel model, JobPosting jobPosting)
+    {
+        model.Title = jobPosting.Title;
+        model.Description = jobPosting.Description;
+        model.RequiredExperienceYears = jobPosting.RequiredExperienceYears;
+        model.RequiredSkillsCsv = jobPosting.RequiredSkillsCsv;
+        model.OpenPositions = jobPosting.OpenPositions;
+    }
+
+    private async Task<JobApplication?> GetLatestApplicationForUserAndJobAsync(string userId, int jobPostingId)
+    {
+        return await _dbContext.JobApplications
+            .Where(a => a.ApplicantUserId == userId && a.JobPostingId == jobPostingId)
+            .OrderByDescending(a => a.AppliedAtUtc)
+            .ThenByDescending(a => a.Id)
+            .FirstOrDefaultAsync();
+    }
+
+    private Task<int> GetApplicationCountForUserAndJobAsync(string userId, int jobPostingId)
+    {
+        return _dbContext.JobApplications.CountAsync(a => a.ApplicantUserId == userId && a.JobPostingId == jobPostingId);
+    }
+
     private static int NormalizeOpenPositions(JobPosting jobPosting)
     {
         return jobPosting.OpenPositions > 0 ? jobPosting.OpenPositions : 1;
-    }
-
-    private Task<int> GetHiredCountForJobAsync(int jobPostingId)
-    {
-        return _dbContext.JobApplications.CountAsync(a => a.JobPostingId == jobPostingId && a.Status == ApplicationStatus.Hired);
-    }
-
-    private static string NormalizeTab(string? tab)
-    {
-        var value = (tab ?? "all").Trim().ToLowerInvariant();
-        return value is "all" or "screened" or "rejected" or "hired" ? value : "all";
     }
 
     private static void RunAutomatedScreening(JobApplication application, JobPosting jobPosting)
@@ -411,6 +599,18 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             .Select(s => s.ToLowerInvariant())
             .ToHashSet(StringComparer.Ordinal);
     }
+
+    private Task<int> GetHiredCountForJobAsync(int jobPostingId)
+    {
+        return _dbContext.JobApplications.CountAsync(a => a.JobPostingId == jobPostingId && a.Status == ApplicationStatus.Hired);
+    }
+
+    private static string NormalizeTab(string? tab)
+    {
+        var value = (tab ?? "all").Trim().ToLowerInvariant();
+        return value is "all" or "screened" or "rejected" or "hired" ? value : "all";
+    }
+
 }
 
 public class ApplyForJobRequest
