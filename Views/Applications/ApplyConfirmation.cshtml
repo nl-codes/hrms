@@ -1,0 +1,14 @@
+@model HRMS.Models.JobApplication
+
+@{
+    ViewData["Title"] = "Application Submitted";
+}
+
+<div class="dashboard-card mx-auto" style="max-width: 760px;">
+    <h1 class="h3 mb-3">Application Submitted</h1>
+    <p class="mb-1">Role: <strong>@Model.JobPosting?.Title</strong></p>
+    <p class="mb-1">Status: <strong>@Model.Status</strong></p>
+    <p class="mb-4">Screened: @Model.ScreenedAtUtc?.ToString("yyyy-MM-dd HH:mm") UTC</p>
+
+    <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Back to Jobs</a>
+</div>

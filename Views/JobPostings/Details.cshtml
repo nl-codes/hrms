@@ -1,0 +1,32 @@
+@model HRMS.Models.JobPosting
+
+@{
+    ViewData["Title"] = "Job Details";
+}
+
+<div class="dashboard-card mx-auto" style="max-width: 900px;">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h1 class="h3 mb-1">@Model.Title</h1>
+            <div class="text-muted">@Model.RequiredExperienceYears years experience required</div>
+        </div>
+        <span class="badge @(Model.IsActive ? "text-bg-success" : "text-bg-secondary")">@(Model.IsActive ? "Active" :
+                 "Closed")</span>
+        </div>
+
+        <p class="mb-4">@Model.Description</p>
+
+        <dl class="row mb-4">
+            <dt class="col-sm-4">Required Skills</dt>
+            <dd class="col-sm-8">@Model.RequiredSkillsCsv</dd>
+            <dt class="col-sm-4">Hourly Rate</dt>
+            <dd class="col-sm-8">@Model.BaseHourlyRate.ToString("C")</dd>
+            <dt class="col-sm-4">Created</dt>
+            <dd class="col-sm-8">@Model.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</dd>
+        </dl>
+
+        <div class="d-flex gap-2">
+            <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply" asp-route-id="@Model.Id">Apply</a>
+            <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
+        </div>
+    </div>

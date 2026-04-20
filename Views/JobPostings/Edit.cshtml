@@ -1,0 +1,53 @@
+@model HRMS.Models.JobPosting
+
+@{
+    ViewData["Title"] = "Edit Job Posting";
+}
+
+<div class="dashboard-card mx-auto" style="max-width: 920px;">
+    <h1 class="h3 mb-3">Edit Job Posting</h1>
+
+    <form asp-action="Edit" method="post" class="row g-3">
+        <input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="col-md-6">
+            <label asp-for="Title" class="form-label"></label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="RequiredExperienceYears" class="form-label"></label>
+            <input asp-for="RequiredExperienceYears" class="form-control" />
+            <span asp-validation-for="RequiredExperienceYears" class="text-danger"></span>
+        </div>
+        <div class="col-md-3">
+            <label asp-for="BaseHourlyRate" class="form-label"></label>
+            <input asp-for="BaseHourlyRate" class="form-control" />
+            <span asp-validation-for="BaseHourlyRate" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="Description" class="form-label"></label>
+            <textarea asp-for="Description" class="form-control" rows="5"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="col-12">
+            <label asp-for="RequiredSkillsCsv" class="form-label"></label>
+            <input asp-for="RequiredSkillsCsv" class="form-control" />
+            <span asp-validation-for="RequiredSkillsCsv" class="text-danger"></span>
+        </div>
+        <div class="col-md-6">
+            <div class="form-check mt-2">
+                <input asp-for="IsActive" class="form-check-input" />
+                <label asp-for="IsActive" class="form-check-label"></label>
+            </div>
+        </div>
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Update</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,23 @@
+@model HRMS.Models.JobPosting
+
+@{
+    ViewData["Title"] = "Delete Job Posting";
+}
+
+<div class="dashboard-card mx-auto" style="max-width: 780px;">
+    <h1 class="h3 text-danger mb-3">Delete Job Posting</h1>
+    <p>Confirm deletion of <strong>@Model.Title</strong>. This will also remove related applications.</p>
+
+    <dl class="row">
+        <dt class="col-sm-4">Description</dt>
+        <dd class="col-sm-8">@Model.Description</dd>
+        <dt class="col-sm-4">Skills</dt>
+        <dd class="col-sm-8">@Model.RequiredSkillsCsv</dd>
+    </dl>
+
+    <form asp-action="Delete" method="post" class="d-flex gap-2">
+        <input asp-for="Id" type="hidden" />
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+    </form>
+</div>

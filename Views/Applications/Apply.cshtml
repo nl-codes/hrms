@@ -1,0 +1,46 @@
+@model ApplyForJobViewModel
+
+@{
+    ViewData["Title"] = "Apply for Job";
+}
+
+<div class="dashboard-card mx-auto" style="max-width: 960px;">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <p class="eyebrow mb-2">Applicant Application</p>
+            <h1 class="h3">@Model.Title</h1>
+            <p class="text-muted">@Model.Description</p>
+
+            <div class="bg-light rounded-3 p-3 mb-3">
+                <div class="fw-semibold mb-1">Screening requirements</div>
+                <div>@Model.RequiredExperienceYears years experience</div>
+                <div>@Model.RequiredSkillsCsv</div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <form asp-action="Apply" method="post" class="row g-3">
+                <input asp-for="JobPostingId" type="hidden" />
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="col-md-4">
+                    <label asp-for="ExperienceYears" class="form-label">Experience</label>
+                    <input asp-for="ExperienceYears" class="form-control" min="0" />
+                    <span asp-validation-for="ExperienceYears" class="text-danger"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="SkillsCsv" class="form-label">Skills</label>
+                    <textarea asp-for="SkillsCsv" class="form-control" rows="4"
+                              placeholder="example: welding, forklift, inventory control"></textarea>
+                    <span asp-validation-for="SkillsCsv" class="text-danger"></span>
+                </div>
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Submit Application</button>
+                    <a asp-controller="JobPostings" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

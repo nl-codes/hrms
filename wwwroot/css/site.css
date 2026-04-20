@@ -1,31 +1,114 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus {
+    box-shadow:
+        0 0 0 0.1rem white,
+        0 0 0 0.25rem #258cfb;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+    background:
+        radial-gradient(
+            circle at top left,
+            rgba(37, 140, 251, 0.12),
+            transparent 34%
+        ),
+        linear-gradient(180deg, #f7f9fc 0%, #eef3f9 100%);
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.form-floating > .form-control-plaintext::placeholder,
+.form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.form-floating > .form-control-plaintext:focus::placeholder,
+.form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+.dashboard-shell {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.dashboard-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem 1.75rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(135deg, #0f172a, #1d4ed8);
+    color: #fff;
+    box-shadow: 0 20px 45px rgba(15, 23, 42, 0.18);
+}
+
+.dashboard-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.dashboard-card {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    border-radius: 1rem;
+    padding: 1.25rem;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-card h2,
+.dashboard-card .h3 {
+    margin-bottom: 0.75rem;
+}
+
+.schedule-table thead th {
+    background: #f8fafc;
+}
+
+.schedule-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.schedule-table tbody tr:hover {
+    background-color: rgba(37, 140, 251, 0.06);
+}
+
+.schedule-summary {
+    min-width: 160px;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #0f172a;
+}
+
+.slot-status.text-success {
+    font-weight: 600;
 }

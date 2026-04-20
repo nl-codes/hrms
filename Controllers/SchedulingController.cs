@@ -12,6 +12,57 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
     private static readonly TimeSpan ShiftDuration = TimeSpan.FromHours(6);
     private readonly ApplicationDbContext _dbContext = dbContext;
 
+    [Authorize(Roles = Roles.Employee + "," + Roles.ProductionManager)]
+    [HttpGet]
+    public IActionResult MySchedule()
+    {
+        var weekStartUtc = DateTime.UtcNow.Date;
+        return View(new EmployeeScheduleViewModel(weekStartUtc, BuildWeeklySlots(weekStartUtc)));
+    }
+
+    [Authorize(Roles = Roles.Employee)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SubmitMySchedule(EmployeeScheduleViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            model.Slots = BuildWeeklySlots(model.WeekStartUtc.Date, model.Slots.Where(slot => slot.IsSelected).Select(slot => slot.Key).ToHashSet(StringComparer.Ordinal));
+            return View("MySchedule", model);
+        }
+
+        var selectedSlots = model.Slots.Where(slot => slot.IsSelected).ToList();
+        var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return Unauthorized();
+        }
+
+        var shifts = selectedSlots
+            .Select(slot => new WorkShift
+            {
+                EmployeeUserId = currentUserId,
+                StartTimeUtc = slot.StartTimeUtc,
+                EndTimeUtc = slot.EndTimeUtc,
+                HourlyRate = slot.HourlyRate
+            })
+            .ToList();
+
+        var validationErrors = ValidateSixThirtySixRule(shifts, model.WeekStartUtc.Date, model.WeekStartUtc.Date.AddDays(7));
+        if (validationErrors.Count > 0)
+        {
+            model.Slots = BuildWeeklySlots(model.WeekStartUtc.Date, selectedSlots.Select(slot => slot.Key).ToHashSet(StringComparer.Ordinal));
+            ViewBag.ValidationErrors = validationErrors;
+            return View("MySchedule", model);
+        }
+
+        _dbContext.WorkShifts.AddRange(shifts);
+        await _dbContext.SaveChangesAsync();
+
+        return RedirectToAction(nameof(MySchedule));
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateWeeklySchedule([FromBody] CreateWeeklyScheduleRequest request)
     {
@@ -130,6 +181,37 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
 
         return errors;
     }
+
+    private static List<EmployeeShiftSlot> BuildWeeklySlots(DateTime weekStartUtc, HashSet<string>? selectedKeys = null)
+    {
+        var slots = new List<EmployeeShiftSlot>();
+
+        for (var dayOffset = 0; dayOffset < 6; dayOffset++)
+        {
+            var dayStart = weekStartUtc.AddDays(dayOffset);
+
+            for (var block = 0; block < 2; block++)
+            {
+                var start = dayStart.AddHours(8 + (block * 6));
+                var end = start.AddHours(6);
+                var key = $"{start:yyyyMMddHH}";
+
+                slots.Add(new EmployeeShiftSlot
+                {
+                    Key = key,
+                    DayLabel = start.ToString("ddd, MMM d"),
+                    StartLabel = start.ToString("HH:mm"),
+                    EndLabel = end.ToString("HH:mm"),
+                    StartTimeUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc),
+                    EndTimeUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc),
+                    HourlyRate = 0,
+                    IsSelected = selectedKeys?.Contains(key) == true
+                });
+            }
+        }
+
+        return slots;
+    }
 }
 
 public class CreateWeeklyScheduleRequest
@@ -144,4 +226,22 @@ public class CreateShiftRequest
     public DateTime StartTimeUtc { get; set; }
     public DateTime EndTimeUtc { get; set; }
     public decimal HourlyRate { get; set; }
+}
+
+public class EmployeeScheduleViewModel(DateTime weekStartUtc, List<EmployeeShiftSlot> slots)
+{
+    public DateTime WeekStartUtc { get; set; } = weekStartUtc;
+    public List<EmployeeShiftSlot> Slots { get; set; } = slots;
+}
+
+public class EmployeeShiftSlot
+{
+    public string Key { get; set; } = string.Empty;
+    public string DayLabel { get; set; } = string.Empty;
+    public string StartLabel { get; set; } = string.Empty;
+    public string EndLabel { get; set; } = string.Empty;
+    public DateTime StartTimeUtc { get; set; }
+    public DateTime EndTimeUtc { get; set; }
+    public decimal HourlyRate { get; set; }
+    public bool IsSelected { get; set; }
 }

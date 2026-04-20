@@ -1,8 +1,96 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<div class="dashboard-shell">
+    <div class="dashboard-hero">
+        <div>
+            <p class="eyebrow">We Build Stuff</p>
+            <h1 class="display-5 fw-bold">Human Resource System</h1>
+            <p class="lead mb-0">Centralized hiring, training, and scheduling for the WBS workforce.</p>
+        </div>
+        <div class="dashboard-meta">
+            <span class="badge rounded-pill bg-light text-dark">HRMS</span>
+            <span class="badge rounded-pill bg-dark">MySQL hrms</span>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-1">
+        <div class="col-lg-4 col-md-6">
+            <div class="dashboard-card h-100">
+                <h2>Hiring Manager</h2>
+                <p>Manage openings, screen applicants, promote employees, and track training.</p>
+                @if (User.IsInRole("HiringManager"))
+                {
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Manage Jobs</a>
+                        <a class="btn btn-outline-primary" asp-controller="JobPostings" asp-action="Create">Create Job
+                            Posting</a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-card h-100">
+                    <h2>Applicant</h2>
+                    <p>Review open roles and submit a profile for automated screening.</p>
+                    @if (User.IsInRole("Applicant"))
+                    {
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Browse Jobs</a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-card h-100">
+                    <h2>Employee</h2>
+                    <p>Pick shifts, review weekly hours, and stay at the 6/36 schedule target.</p>
+                    @if (User.IsInRole("Employee"))
+                    {
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-primary" asp-controller="Scheduling" asp-action="MySchedule">My Schedule</a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-card h-100">
+                    <h2>Instructor</h2>
+                    <p>Mark training completion and keep employee progress current.</p>
+                    @if (User.IsInRole("Instructor"))
+                    {
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-primary" href="#">Training Console</a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-card h-100">
+                    <h2>Production Manager</h2>
+                    <p>View work schedules without editing employee assignments.</p>
+                    @if (User.IsInRole("ProductionManager"))
+                    {
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-primary" asp-controller="Scheduling" asp-action="MySchedule">View Schedule</a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-card h-100">
+                    <h2>Public Access</h2>
+                    <p>Use the shared login portal or browse the active job board.</p>
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-outline-dark" asp-controller="JobPostings" asp-action="Index">Open Jobs</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
