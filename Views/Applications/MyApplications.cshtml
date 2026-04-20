@@ -1,0 +1,50 @@
+@model IReadOnlyList<ApplicantApplicationItemViewModel>
+
+@{
+    ViewData["Title"] = "My Applications";
+}
+
+<div class="dashboard-card">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+        <div>
+            <h1 class="h3 mb-1">My Applications</h1>
+            <p class="text-muted mb-0">Track the status of your submitted applications.</p>
+        </div>
+        <a class="btn btn-outline-primary" asp-controller="JobPostings" asp-action="Index">Browse Jobs</a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info mb-0">You have not submitted any applications yet.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Application</th>
+                        <th>Job</th>
+                        <th>Status</th>
+                        <th>Applied</th>
+                        <th>Screened</th>
+                        <th>Hired</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var app in Model)
+                    {
+                        <tr>
+                            <td>#@app.Id</td>
+                            <td>@app.JobTitle</td>
+                            <td><span class="badge text-bg-secondary">@app.Status</span></td>
+                            <td>@app.AppliedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                            <td>@(app.ScreenedAtUtc?.ToString("yyyy-MM-dd HH:mm") + " UTC" ?? "-")</td>
+                            <td>@(app.HiredAtUtc?.ToString("yyyy-MM-dd HH:mm") + " UTC" ?? "-")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

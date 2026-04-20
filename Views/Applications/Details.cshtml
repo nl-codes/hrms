@@ -1,0 +1,55 @@
+@model ApplicationDetailsViewModel
+
+@{
+    ViewData["Title"] = "Application Details";
+}
+
+<div class="dashboard-card mx-auto" style="max-width: 920px;">
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div>
+            <h1 class="h3 mb-1">Application #@Model.Id</h1>
+            <div class="text-muted">Applicant: @Model.ApplicantEmail</div>
+        </div>
+        <span class="badge text-bg-secondary">@Model.Status</span>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="alert alert-success">@success</div>
+    }
+
+    <dl class="row mb-4">
+        <dt class="col-sm-4">Job Title</dt>
+        <dd class="col-sm-8">@Model.JobTitle</dd>
+
+        <dt class="col-sm-4">Job Description</dt>
+        <dd class="col-sm-8">@Model.JobDescription</dd>
+
+        <dt class="col-sm-4">Experience</dt>
+        <dd class="col-sm-8">@Model.ApplicantExperienceYears years</dd>
+
+        <dt class="col-sm-4">Skills</dt>
+        <dd class="col-sm-8">@Model.ApplicantSkillsCsv</dd>
+
+        <dt class="col-sm-4">Applied</dt>
+        <dd class="col-sm-8">@Model.AppliedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</dd>
+
+        <dt class="col-sm-4">Screened</dt>
+        <dd class="col-sm-8">@(Model.ScreenedAtUtc?.ToString("yyyy-MM-dd HH:mm") + " UTC" ?? "-")</dd>
+
+        <dt class="col-sm-4">Hired</dt>
+        <dd class="col-sm-8">@(Model.HiredAtUtc?.ToString("yyyy-MM-dd HH:mm") + " UTC" ?? "-")</dd>
+    </dl>
+
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary" asp-action="Index">Back to Review</a>
+        @if (Model.CanHire)
+        {
+            <form asp-action="Hire" method="post" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="applicationId" value="@Model.Id" />
+                <button type="submit" class="btn btn-primary">Hire Applicant</button>
+            </form>
+        }
+    </div>
+</div>
