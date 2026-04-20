@@ -1,5 +1,12 @@
 ﻿@{
     ViewData["Title"] = "Dashboard";
+
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isHiringManager = User.IsInRole("HiringManager");
+    var isApplicant = User.IsInRole("Applicant");
+    var isEmployee = User.IsInRole("Employee");
+    var isInstructor = User.IsInRole("Instructor");
+    var isProductionManager = User.IsInRole("ProductionManager");
 }
 
 <div class="dashboard-shell">
@@ -16,81 +23,85 @@
     </div>
 
     <div class="row g-4 mt-1">
-        <div class="col-lg-4 col-md-6">
-            <div class="dashboard-card h-100">
-                <h2>Hiring Manager</h2>
-                <p>Manage openings, screen applicants, promote employees, and track training.</p>
-                @if (User.IsInRole("HiringManager"))
-                {
+        @if (isHiringManager)
+        {
+            <div class="col-lg-4 col-md-6">
+                <div class="dashboard-card h-100">
+                    <h2>Hiring Manager</h2>
+                    <p>Manage openings, screen applicants, promote employees, and track training.</p>
                     <div class="d-grid gap-2">
                         <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Manage Jobs</a>
-                        <a class="btn btn-outline-primary" asp-controller="JobPostings" asp-action="Create">Create Job
-                            Posting</a>
-                        </div>
-                    }
+                        <a class="btn btn-outline-primary" asp-controller="JobPostings" asp-action="Create">Create Job Posting</a>
+                    </div>
                 </div>
             </div>
+        }
 
+        @if (isApplicant)
+        {
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card h-100">
                     <h2>Applicant</h2>
                     <p>Review open roles and submit a profile for automated screening.</p>
-                    @if (User.IsInRole("Applicant"))
-                    {
-                        <div class="d-grid gap-2">
-                            <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Browse Jobs</a>
-                        </div>
-                    }
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Browse Jobs</a>
+                    </div>
                 </div>
             </div>
+        }
 
+        @if (isEmployee)
+        {
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card h-100">
                     <h2>Employee</h2>
                     <p>Pick shifts, review weekly hours, and stay at the 6/36 schedule target.</p>
-                    @if (User.IsInRole("Employee"))
-                    {
-                        <div class="d-grid gap-2">
-                            <a class="btn btn-primary" asp-controller="Scheduling" asp-action="MySchedule">My Schedule</a>
-                        </div>
-                    }
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary" asp-controller="Scheduling" asp-action="MySchedule">My Schedule</a>
+                    </div>
                 </div>
             </div>
+        }
 
+        @if (isInstructor)
+        {
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card h-100">
                     <h2>Instructor</h2>
                     <p>Mark training completion and keep employee progress current.</p>
-                    @if (User.IsInRole("Instructor"))
-                    {
-                        <div class="d-grid gap-2">
-                            <a class="btn btn-primary" href="#">Training Console</a>
-                        </div>
-                    }
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary" href="#">Training Console</a>
+                    </div>
                 </div>
             </div>
+        }
 
+        @if (isProductionManager)
+        {
             <div class="col-lg-4 col-md-6">
                 <div class="dashboard-card h-100">
                     <h2>Production Manager</h2>
                     <p>View work schedules without editing employee assignments.</p>
-                    @if (User.IsInRole("ProductionManager"))
-                    {
-                        <div class="d-grid gap-2">
-                            <a class="btn btn-primary" asp-controller="Scheduling" asp-action="MySchedule">View Schedule</a>
-                        </div>
-                    }
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary" asp-controller="Scheduling" asp-action="MySchedule">View Schedule</a>
+                    </div>
                 </div>
             </div>
+        }
 
-            <div class="col-lg-4 col-md-6">
+        @if (!isAuthenticated)
+        {
+            <div class="col-lg-6 col-md-8">
                 <div class="dashboard-card h-100">
                     <h2>Public Access</h2>
                     <p>Use the shared login portal or browse the active job board.</p>
                     <div class="d-grid gap-2">
+                        <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Login</a>
+                        <a class="btn btn-outline-primary" asp-controller="Account" asp-action="Register">Register</a>
                         <a class="btn btn-outline-dark" asp-controller="JobPostings" asp-action="Index">Open Jobs</a>
                     </div>
                 </div>
             </div>
+        }
         </div>
     </div>

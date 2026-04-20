@@ -6,11 +6,18 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.Controllers;
 
-[Authorize(Roles = Roles.HiringManager)]
+[Authorize]
 public class SchedulingController(ApplicationDbContext dbContext) : Controller
 {
     private static readonly TimeSpan ShiftDuration = TimeSpan.FromHours(6);
     private readonly ApplicationDbContext _dbContext = dbContext;
+
+    [Authorize(Roles = Roles.Employee)]
+    [HttpGet]
+    public IActionResult Index()
+    {
+        return RedirectToAction(nameof(MySchedule));
+    }
 
     [Authorize(Roles = Roles.Employee + "," + Roles.ProductionManager)]
     [HttpGet]
@@ -64,6 +71,7 @@ public class SchedulingController(ApplicationDbContext dbContext) : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.HiringManager)]
     public async Task<IActionResult> CreateWeeklySchedule([FromBody] CreateWeeklyScheduleRequest request)
     {
         if (!ModelState.IsValid)

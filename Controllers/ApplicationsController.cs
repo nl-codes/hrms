@@ -8,13 +8,72 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Controllers;
 
+[Authorize]
 public class ApplicationsController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager) : Controller
 {
     private readonly ApplicationDbContext _dbContext = dbContext;
     private readonly UserManager<ApplicationUser> _userManager = userManager;
 
     [Authorize(Roles = Roles.Applicant)]
+    [HttpGet]
+    public async Task<IActionResult> Apply(int id)
+    {
+        var job = await _dbContext.JobPostings.FirstOrDefaultAsync(j => j.Id == id && j.IsActive);
+        if (job is null)
+        {
+            return NotFound("Job posting not found or inactive.");
+        }
+
+        return View(new ApplyForJobViewModel(job));
+    }
+
+    [Authorize(Roles = Roles.Applicant)]
     [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Apply(ApplyForJobViewModel model)
+    {
+        var job = await _dbContext.JobPostings.FirstOrDefaultAsync(j => j.Id == model.JobPostingId && j.IsActive);
+        if (job is null)
+        {
+            return NotFound("Job posting not found or inactive.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            model.Title = job.Title;
+            model.Description = job.Description;
+            model.RequiredExperienceYears = job.RequiredExperienceYears;
+            model.RequiredSkillsCsv = job.RequiredSkillsCsv;
+            return View(model);
+        }
+
+        var userId = _userManager.GetUserId(User);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        var application = new JobApplication
+        {
+            JobPostingId = model.JobPostingId,
+            ApplicantUserId = userId,
+            ApplicantExperienceYears = model.ExperienceYears,
+            ApplicantSkillsCsv = model.SkillsCsv,
+            Status = ApplicationStatus.Applied,
+            AppliedAtUtc = DateTime.UtcNow
+        };
+
+        RunAutomatedScreening(application, job);
+
+        _dbContext.JobApplications.Add(application);
+        await _dbContext.SaveChangesAsync();
+
+        return RedirectToAction(nameof(ApplyConfirmation), new { id = application.Id });
+    }
+
+    [Authorize(Roles = Roles.Applicant)]
+    [HttpPost]
+    [Consumes("application/json")]
     public async Task<IActionResult> Apply([FromBody] ApplyForJobRequest request)
     {
         if (!ModelState.IsValid)
@@ -56,6 +115,17 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             application.AppliedAtUtc,
             application.ScreenedAtUtc
         });
+    }
+
+    [Authorize(Roles = Roles.Applicant)]
+    [HttpGet]
+    public async Task<IActionResult> ApplyConfirmation(int id)
+    {
+        var application = await _dbContext.JobApplications
+            .Include(a => a.JobPosting)
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        return application is null ? NotFound() : View(application);
     }
 
     [Authorize(Roles = Roles.HiringManager)]

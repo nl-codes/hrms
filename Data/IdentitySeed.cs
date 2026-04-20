@@ -29,8 +29,8 @@ public static class IdentitySeed
             }
         }
 
-        const string adminEmail = "hiring.manager@wbs.local";
-        const string adminPassword = "hiring.manager@wbs.local";
+        const string adminEmail = "Hiring.manager01@wbs.local";
+        const string adminPassword = "Hiring.manager01@wbs.local";
 
         var admin = await userManager.FindByEmailAsync(adminEmail);
         if (admin is null)
