@@ -45,28 +45,7 @@ public class AccountController(
             return RedirectToAction("Index", "Home");
         }
 
-        var roles = await _userManager.GetRolesAsync(user);
-        if (roles.Contains(Roles.HiringManager))
-        {
-            return RedirectToAction("Index", "JobPostings");
-        }
-
-        if (roles.Contains(Roles.Employee))
-        {
-            return RedirectToAction("Index", "Scheduling");
-        }
-
-        if (roles.Contains(Roles.ProductionManager))
-        {
-            return RedirectToAction("MySchedule", "Scheduling");
-        }
-
-        if (roles.Contains(Roles.Instructor))
-        {
-            return RedirectToAction("Index", "Home");
-        }
-
-        return RedirectToAction("Index", "JobPostings");
+        return RedirectToAction("Index", "Home");
     }
 
     [AllowAnonymous]
