@@ -126,6 +126,11 @@ namespace HRMS.Migrations
                     b.Property<int>("ApplicantExperienceYears")
                         .HasColumnType("int");
 
+                    b.Property<string>("ApplicantPhone")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)");
+
                     b.Property<string>("ApplicantSkillsCsv")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -144,11 +149,25 @@ namespace HRMS.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(1);
 
+                    b.Property<string>("CoverLetter")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)");
+
+                    b.Property<string>("HighestDegree")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
                     b.Property<DateTime?>("HiredAtUtc")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("JobPostingId")
                         .HasColumnType("int");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
 
                     b.Property<DateTime?>("ScreenedAtUtc")
                         .HasColumnType("datetime(6)");
@@ -156,7 +175,15 @@ namespace HRMS.Migrations
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicantUserId");
 
                     b.HasIndex("JobPostingId");
 
@@ -187,6 +214,11 @@ namespace HRMS.Migrations
 
                     b.Property<int>("OpenPositions")
                         .HasColumnType("int");
+
+                    b.Property<string>("RequiredDegree")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
                     b.Property<int>("RequiredExperienceYears")
                         .HasColumnType("int");
@@ -452,11 +484,19 @@ namespace HRMS.Migrations
 
             modelBuilder.Entity("HRMS.Models.JobApplication", b =>
                 {
+                    b.HasOne("HRMS.Data.ApplicationUser", "ApplicantUser")
+                        .WithMany("JobApplications")
+                        .HasForeignKey("ApplicantUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("HRMS.Models.JobPosting", "JobPosting")
                         .WithMany("Applications")
                         .HasForeignKey("JobPostingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ApplicantUser");
 
                     b.Navigation("JobPosting");
                 });
@@ -540,6 +580,11 @@ namespace HRMS.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Data.ApplicationUser", b =>
+                {
+                    b.Navigation("JobApplications");
                 });
 
             modelBuilder.Entity("HRMS.Models.JobPosting", b =>

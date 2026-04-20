@@ -36,8 +36,26 @@
         <dt class="col-sm-4">Experience</dt>
         <dd class="col-sm-8">@Model.ApplicantExperienceYears years</dd>
 
+        <dt class="col-sm-4">Highest Degree</dt>
+        <dd class="col-sm-8">@Model.HighestDegree</dd>
+
+        <dt class="col-sm-4">Phone</dt>
+        <dd class="col-sm-8">@Model.ApplicantPhone</dd>
+
         <dt class="col-sm-4">Skills</dt>
         <dd class="col-sm-8">@Model.ApplicantSkillsCsv</dd>
+
+        <dt class="col-sm-4">Cover Letter</dt>
+        <dd class="col-sm-8" style="white-space: pre-wrap;">@Model.CoverLetter</dd>
+
+        <dt class="col-sm-4">Rejection Reason</dt>
+        <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.RejectionReason) ? "-" : Model.RejectionReason)</dd>
+
+        <dt class="col-sm-4">Submitted</dt>
+        <dd class="col-sm-8">@Model.SubmittedAt.ToString("yyyy-MM-dd HH:mm") UTC</dd>
+
+        <dt class="col-sm-4">Last Updated</dt>
+        <dd class="col-sm-8">@Model.UpdatedAt.ToString("yyyy-MM-dd HH:mm") UTC</dd>
 
         <dt class="col-sm-4">Applied</dt>
         <dd class="col-sm-8">@Model.AppliedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</dd>

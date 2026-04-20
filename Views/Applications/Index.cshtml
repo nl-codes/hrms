@@ -44,6 +44,8 @@
                             <th>Id</th>
                             <th>Applicant</th>
                             <th>Job</th>
+                            <th>Highest Degree</th>
+                            <th>Experience</th>
                             <th>Status</th>
                             <th>Applied</th>
                             <th class="text-end">Actions</th>
@@ -56,8 +58,19 @@
                                 <td>#@app.Id</td>
                                 <td>@app.ApplicantEmail</td>
                                 <td>@app.JobTitle</td>
+                                <td>@app.HighestDegree</td>
+                                <td>@app.ApplicantExperienceYears years</td>
                                 <td>
                                     <partial name="_ApplicationStatusBadge" model="app.Status" />
+                                    @if (app.Status == ApplicationStatus.Rejected &&
+                                                            !string.IsNullOrWhiteSpace(app.RejectionReason))
+                                    {
+                                        <div class="small text-danger mt-1">Rejected: @app.RejectionReason</div>
+                                    }
+                                    else if (app.Status == ApplicationStatus.Screened)
+                                    {
+                                        <div class="small text-muted mt-1">Passed automated screening.</div>
+                                    }
                                 </td>
                                 <td>@app.AppliedAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
                                 <td class="text-end">

@@ -22,6 +22,7 @@
             <div class="bg-light rounded-3 p-3 mb-3">
                 <div class="fw-semibold mb-1">Screening requirements</div>
                 <div>@Model.RequiredExperienceYears years experience</div>
+                <div>Required degree: @Model.RequiredDegree</div>
                 <div>@Model.RequiredSkillsCsv</div>
                 <div>@Model.OpenPositions openings available</div>
             </div>
@@ -36,11 +37,33 @@
                     <input asp-for="ExperienceYears" class="form-control" min="0" />
                     <span asp-validation-for="ExperienceYears" class="text-danger"></span>
                 </div>
+                <div class="col-md-4">
+                    <label asp-for="HighestDegree" class="form-label">Highest Degree</label>
+                    <select asp-for="HighestDegree" class="form-select">
+                        <option value="">Select degree</option>
+                        <option value="Post-Graduate">Post-Graduate</option>
+                        <option value="UnderGraduate">UnderGraduate</option>
+                        <option value="High School">High School</option>
+                        <option value="UnEducated">UnEducated</option>
+                    </select>
+                    <span asp-validation-for="HighestDegree" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ApplicantPhone" class="form-label">Phone</label>
+                    <input asp-for="ApplicantPhone" class="form-control" placeholder="+1 555 000 0000" />
+                    <span asp-validation-for="ApplicantPhone" class="text-danger"></span>
+                </div>
                 <div class="col-12">
                     <label asp-for="SkillsCsv" class="form-label">Skills</label>
                     <textarea asp-for="SkillsCsv" class="form-control" rows="4"
                               placeholder="example: welding, forklift, inventory control"></textarea>
                     <span asp-validation-for="SkillsCsv" class="text-danger"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="CoverLetter" class="form-label">Cover Letter</label>
+                    <textarea asp-for="CoverLetter" class="form-control" rows="6"
+                              placeholder="Summarize your background and why you are a fit for this role."></textarea>
+                    <span asp-validation-for="CoverLetter" class="text-danger"></span>
                 </div>
                 <div class="col-12 d-flex gap-2">
                     <button type="submit" class="btn btn-primary">@Model.ActionButtonText</button>

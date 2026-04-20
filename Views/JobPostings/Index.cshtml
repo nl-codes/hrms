@@ -21,6 +21,7 @@
             <tr>
                 <th>Title</th>
                 <th>Experience</th>
+                <th>Required Degree</th>
                 <th>Openings</th>
                 <th>Skills</th>
                 <th>Status</th>
@@ -36,6 +37,7 @@
                         <div class="small text-muted">Posted @job.CreatedAtUtc.ToString("yyyy-MM-dd")</div>
                     </td>
                     <td>@job.RequiredExperienceYears years</td>
+                    <td>@job.RequiredDegree</td>
                     <td>@job.OpenPositions</td>
                     <td>@job.RequiredSkillsCsv</td>
                     <td>

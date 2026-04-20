@@ -24,6 +24,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<JobApplication>()
+            .HasOne(a => a.ApplicantUser)
+            .WithMany(u => u.JobApplications)
+            .HasForeignKey(a => a.ApplicantUserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<JobApplication>()
             .Property(a => a.AttemptNumber)
             .HasDefaultValue(1);
 

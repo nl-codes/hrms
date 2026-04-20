@@ -15,6 +15,9 @@ public class JobPosting
     [Range(0, 50)]
     public int RequiredExperienceYears { get; set; }
 
+    [Required, MaxLength(50)]
+    public string RequiredDegree { get; set; } = "High School";
+
     [Required, MaxLength(1000)]
     public string RequiredSkillsCsv { get; set; } = string.Empty;
 

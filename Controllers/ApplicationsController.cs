@@ -147,10 +147,15 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             JobPostingId = model.JobPostingId,
             ApplicantUserId = userId,
             ApplicantExperienceYears = model.ExperienceYears,
+            HighestDegree = model.HighestDegree,
+            ApplicantPhone = model.ApplicantPhone,
+            CoverLetter = model.CoverLetter,
             ApplicantSkillsCsv = model.SkillsCsv,
             AttemptNumber = applicationCount + 1,
             Status = ApplicationStatus.Applied,
-            AppliedAtUtc = DateTime.UtcNow
+            AppliedAtUtc = DateTime.UtcNow,
+            SubmittedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         RunAutomatedScreening(application, job);
@@ -214,10 +219,15 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             JobPostingId = request.JobPostingId,
             ApplicantUserId = userId,
             ApplicantExperienceYears = request.ExperienceYears,
+            HighestDegree = request.HighestDegree,
+            ApplicantPhone = request.ApplicantPhone,
+            CoverLetter = request.CoverLetter,
             ApplicantSkillsCsv = request.SkillsCsv,
             AttemptNumber = applicationCount + 1,
             Status = ApplicationStatus.Applied,
-            AppliedAtUtc = DateTime.UtcNow
+            AppliedAtUtc = DateTime.UtcNow,
+            SubmittedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
 
         RunAutomatedScreening(application, job);
@@ -320,9 +330,15 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
                 ApplicantUserId = a.ApplicantUserId,
                 JobTitle = a.JobPosting != null ? a.JobPosting.Title : "Unknown",
                 ApplicantExperienceYears = a.ApplicantExperienceYears,
+                HighestDegree = a.HighestDegree,
+                ApplicantPhone = a.ApplicantPhone,
                 ApplicantSkillsCsv = a.ApplicantSkillsCsv,
+                CoverLetter = a.CoverLetter,
+                RejectionReason = a.RejectionReason,
                 Status = a.Status,
                 AppliedAtUtc = a.AppliedAtUtc,
+                SubmittedAt = a.SubmittedAt,
+                UpdatedAt = a.UpdatedAt,
                 ScreenedAtUtc = a.ScreenedAtUtc,
                 HiredAtUtc = a.HiredAtUtc
             })
@@ -391,10 +407,16 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
             JobTitle = application.JobPosting?.Title ?? "Unknown",
             JobDescription = application.JobPosting?.Description ?? string.Empty,
             ApplicantExperienceYears = application.ApplicantExperienceYears,
+            HighestDegree = application.HighestDegree,
+            ApplicantPhone = application.ApplicantPhone,
+            CoverLetter = application.CoverLetter,
             ApplicantSkillsCsv = application.ApplicantSkillsCsv,
+            RejectionReason = application.RejectionReason,
             AttemptNumber = application.AttemptNumber,
             Status = application.Status,
             AppliedAtUtc = application.AppliedAtUtc,
+            SubmittedAt = application.SubmittedAt,
+            UpdatedAt = application.UpdatedAt,
             ScreenedAtUtc = application.ScreenedAtUtc,
             HiredAtUtc = application.HiredAtUtc,
             CanEdit = canEditOwnApplication,
@@ -430,6 +452,8 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
 
         application.Status = ApplicationStatus.Screened;
         application.ScreenedAtUtc = DateTime.UtcNow;
+        application.RejectionReason = null;
+        application.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
         TempData["SuccessMessage"] = $"Application #{application.Id} screened successfully.";
@@ -454,6 +478,8 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
 
         application.Status = ApplicationStatus.Rejected;
         application.ScreenedAtUtc = DateTime.UtcNow;
+        application.RejectionReason = "Rejected after manager review.";
+        application.UpdatedAt = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
 
         TempData["SuccessMessage"] = $"Application #{application.Id} rejected successfully.";
@@ -523,6 +549,8 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
 
         application.Status = ApplicationStatus.Hired;
         application.HiredAtUtc = DateTime.UtcNow;
+        application.RejectionReason = null;
+        application.UpdatedAt = DateTime.UtcNow;
 
         var hiredCountAfter = hiredCountBefore + 1;
         if (hiredCountAfter >= openPositions)
@@ -544,6 +572,9 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
         {
             ApplicationId = isEditing ? application.Id : null,
             ExperienceYears = application.ApplicantExperienceYears,
+            HighestDegree = application.HighestDegree,
+            ApplicantPhone = application.ApplicantPhone,
+            CoverLetter = application.CoverLetter,
             SkillsCsv = application.ApplicantSkillsCsv,
             IsEditing = isEditing,
             IsReapply = isReapply
@@ -555,6 +586,7 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
         model.Title = jobPosting.Title;
         model.Description = jobPosting.Description;
         model.RequiredExperienceYears = jobPosting.RequiredExperienceYears;
+        model.RequiredDegree = jobPosting.RequiredDegree;
         model.RequiredSkillsCsv = jobPosting.RequiredSkillsCsv;
         model.OpenPositions = jobPosting.OpenPositions;
     }
@@ -580,24 +612,50 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
 
     private static void RunAutomatedScreening(JobApplication application, JobPosting jobPosting)
     {
-        var requiredSkills = ParseCsv(jobPosting.RequiredSkillsCsv);
-        var applicantSkills = ParseCsv(application.ApplicantSkillsCsv);
+        if (application.ApplicantExperienceYears < jobPosting.RequiredExperienceYears)
+        {
+            application.Status = ApplicationStatus.Rejected;
+            application.RejectionReason = "Insufficient experience.";
+            application.ScreenedAtUtc = DateTime.UtcNow;
+            application.UpdatedAt = DateTime.UtcNow;
+            return;
+        }
 
-        var hasMinimumExperience = application.ApplicantExperienceYears >= jobPosting.RequiredExperienceYears;
-        var hasAllRequiredSkills = requiredSkills.All(skill => applicantSkills.Contains(skill));
+        var applicantDegreeRank = GetDegreeRank(application.HighestDegree);
+        var requiredDegreeRank = GetDegreeRank(jobPosting.RequiredDegree);
+        if (applicantDegreeRank < requiredDegreeRank)
+        {
+            application.Status = ApplicationStatus.Rejected;
+            application.RejectionReason = "Degree requirement not met.";
+            application.ScreenedAtUtc = DateTime.UtcNow;
+            application.UpdatedAt = DateTime.UtcNow;
+            return;
+        }
 
-        application.Status = hasMinimumExperience && hasAllRequiredSkills
-            ? ApplicationStatus.Screened
-            : ApplicationStatus.Rejected;
+        application.Status = ApplicationStatus.Screened;
+        application.RejectionReason = null;
         application.ScreenedAtUtc = DateTime.UtcNow;
+        application.UpdatedAt = DateTime.UtcNow;
     }
 
-    private static HashSet<string> ParseCsv(string csv)
+    private static int GetDegreeRank(string? degree)
     {
-        return csv
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(s => s.ToLowerInvariant())
-            .ToHashSet(StringComparer.Ordinal);
+        var normalized = (degree ?? string.Empty).Trim().ToLowerInvariant();
+        return normalized switch
+        {
+            "post-graduate" => 4,
+            "postgraduate" => 4,
+            "master" => 4,
+            "doctorate" => 5,
+            "phd" => 5,
+            "undergraduate" => 3,
+            "under-graduate" => 3,
+            "bachelor" => 3,
+            "high school" => 2,
+            "highschool" => 2,
+            "uneducated" => 1,
+            _ => 0
+        };
     }
 
     private Task<int> GetHiredCountForJobAsync(int jobPostingId)
@@ -617,5 +675,8 @@ public class ApplyForJobRequest
 {
     public int JobPostingId { get; set; }
     public int ExperienceYears { get; set; }
+    public string HighestDegree { get; set; } = string.Empty;
+    public string ApplicantPhone { get; set; } = string.Empty;
+    public string CoverLetter { get; set; } = string.Empty;
     public string SkillsCsv { get; set; } = string.Empty;
 }
