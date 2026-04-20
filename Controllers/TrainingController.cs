@@ -235,33 +235,52 @@ public class TrainingController(ApplicationDbContext dbContext) : Controller
                 .ToList()
         };
 
+        viewModel.AttendanceUpdates = viewModel.Enrollments
+            .Select(e => new TrainingEnrollmentAttendanceUpdateViewModel
+            {
+                EmployeeUserId = e.EmployeeUserId,
+                Status = e.Status
+            })
+            .ToList();
+
         return View(viewModel);
     }
 
     [Authorize(Roles = Roles.Instructor)]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateEnrollmentStatus(int sessionId, string employeeUserId, EnrollmentStatus status)
+    public async Task<IActionResult> UpdateAttendance(TrainingDetailsViewModel model)
     {
-        var session = await GetOwnedSessionAsync(sessionId);
+        var session = await GetOwnedSessionAsync(model.Id);
         if (session is null)
         {
             return NotFound();
         }
 
-        var enrollment = await _dbContext.TrainingEnrollments
-            .FirstOrDefaultAsync(e => e.TrainingSessionId == sessionId && e.EmployeeUserId == employeeUserId);
-
-        if (enrollment is null)
+        if (model.AttendanceUpdates.Count == 0)
         {
-            return NotFound();
+            TempData["ErrorMessage"] = "No attendance records were submitted.";
+            return RedirectToAction(nameof(Details), new { id = model.Id });
         }
 
-        enrollment.Status = status;
+        var enrollments = await _dbContext.TrainingEnrollments
+            .Where(e => e.TrainingSessionId == model.Id)
+            .ToDictionaryAsync(e => e.EmployeeUserId);
+
+        foreach (var attendanceUpdate in model.AttendanceUpdates)
+        {
+            if (!enrollments.TryGetValue(attendanceUpdate.EmployeeUserId, out var enrollment))
+            {
+                return NotFound();
+            }
+
+            enrollment.Status = attendanceUpdate.Status;
+        }
+
         await _dbContext.SaveChangesAsync();
 
-        TempData["SuccessMessage"] = "Attendance status updated.";
-        return RedirectToAction(nameof(Details), new { id = sessionId });
+        TempData["SuccessMessage"] = "Attendance records updated.";
+        return RedirectToAction(nameof(Details), new { id = model.Id });
     }
 
     [Authorize(Roles = Roles.Employee)]
@@ -461,6 +480,12 @@ public class TrainingEnrollmentItemViewModel
     public EnrollmentStatus Status { get; set; }
 }
 
+public class TrainingEnrollmentAttendanceUpdateViewModel
+{
+    public string EmployeeUserId { get; set; } = string.Empty;
+    public EnrollmentStatus Status { get; set; }
+}
+
 public class TrainingDetailsViewModel
 {
     public int Id { get; set; }
@@ -472,6 +497,7 @@ public class TrainingDetailsViewModel
     public string InstructorName { get; set; } = string.Empty;
     public bool CanManageAttendance { get; set; }
     public List<TrainingEnrollmentItemViewModel> Enrollments { get; set; } = [];
+    public List<TrainingEnrollmentAttendanceUpdateViewModel> AttendanceUpdates { get; set; } = [];
 }
 
 public class EmployeeTrainingSessionListItemViewModel
