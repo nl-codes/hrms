@@ -9,77 +9,80 @@
     <div class="dashboard-card d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
             <h1 class="h3 mb-1">Work Hours Report</h1>
-            <p class="text-muted mb-0">Range: @Model.RangeStartDate.ToString("yyyy-MM-dd") to @Model.RangeEndDate.ToString("yyyy-MM-dd")</p>
+            <p class="text-muted mb-0">Range: @Model.RangeStartDate.ToString("yyyy-MM-dd") to
+                @Model.RangeEndDate.ToString("yyyy-MM-dd")</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 no-print">
+                <a class="btn btn-outline-secondary" asp-action="Index">Back to Dashboard</a>
+                <button type="button" class="btn btn-outline-dark" onclick="window.print()">Print Report</button>
+            </div>
         </div>
-        <div class="d-flex flex-wrap gap-2 no-print">
-            <a class="btn btn-outline-secondary" asp-action="Index">Back to Dashboard</a>
-            <button type="button" class="btn btn-outline-dark" onclick="window.print()">Print Report</button>
-        </div>
-    </div>
 
-    <div class="dashboard-card">
-        <form asp-action="WorkHours" method="get" class="row g-3 align-items-end no-print">
-            <div class="col-md-3">
-                <label class="form-label" for="periodType">Period</label>
-                <select id="periodType" name="periodType" class="form-select">
-                    <option value="week" selected="@(isWeek)">Week</option>
-                    <option value="month" selected="@(!isWeek)">Month</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label" for="referenceDate">Reference Date</label>
-                <input id="referenceDate" name="referenceDate" type="date" class="form-control" value="@Model.ReferenceDate.ToString("yyyy-MM-dd")" required />
-            </div>
-            <div class="col-md-6">
-                <button type="submit" class="btn btn-primary">Apply Filter</button>
-            </div>
-        </form>
+        <div class="dashboard-card">
+            <form asp-action="WorkHours" method="get" class="row g-3 align-items-end no-print">
+                <div class="col-md-3">
+                    <label class="form-label" for="periodType">Period</label>
+                    <select id="periodType" name="periodType" class="form-select">
+                        <option value="week" selected="@(isWeek)">Week</option>
+                        <option value="month" selected="@(!isWeek)">Month</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="referenceDate">Reference Date</label>
+                    <input id="referenceDate" name="referenceDate" type="date" class="form-control"
+                           value="@Model.ReferenceDate.ToString("yyyy-MM-dd")" required />
+                </div>
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                </div>
+            </form>
 
-        @if (!Model.Rows.Any())
-        {
-            <div class="alert alert-info mb-0">No employees were found for this report.</div>
-        }
-        else
-        {
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th>Employee Name</th>
-                            <th>Week/Month Range</th>
-                            <th>Total Hours Worked</th>
-                            <th>Weekly Requirement</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var row in Model.Rows)
-                        {
-                            <tr class="@(row.IsBelowWeeklyTarget ? "table-warning" : string.Empty)">
-                                <td>@row.EmployeeName</td>
-                                <td>@row.RangeStartDate.ToString("yyyy-MM-dd") to @row.RangeEndDate.ToString("yyyy-MM-dd")</td>
-                                <td>@row.TotalHoursWorked.ToString("0.##")</td>
-                                <td>
-                                    @if (isWeek)
-                                    {
-                                        if (row.IsBelowWeeklyTarget)
-                                        {
-                                            <span class="badge text-bg-warning text-dark">Below @Model.WeeklyTargetHours.ToString("0") hrs</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge text-bg-success">Met</span>
-                                        }
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Monthly view</span>
-                                    }
-                                </td>
+            @if (!Model.Rows.Any())
+            {
+                <div class="alert alert-info mb-0">No employees were found for this report.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Employee Name</th>
+                                <th>Week/Month Range</th>
+                                <th>Total Hours Worked</th>
+                                <th>Weekly Requirement</th>
                             </tr>
-                        }
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Rows)
+                            {
+                                <tr class="@(row.IsBelowWeeklyTarget ? "table-warning" : string.Empty)">
+                                    <td>@row.EmployeeName</td>
+                                    <td>@row.RangeStartDate.ToString("yyyy-MM-dd") to @row.RangeEndDate.ToString("yyyy-MM-dd")</td>
+                                    <td>@row.TotalHoursWorked.ToString("0.##")</td>
+                                    <td>
+                                        @if (isWeek)
+                                        {
+                                            if (row.IsBelowWeeklyTarget)
+                                            {
+                                                <span class="badge text-bg-warning text-dark">Below @Model.WeeklyTargetHours.ToString("0")
+                                                    hrs</span>
+                                                }
+                                        else
+                                                {
+                                                    <span class="badge text-bg-success">Met</span>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Monthly view</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
             </div>
-        }
-    </div>
-</div>
+        </div>

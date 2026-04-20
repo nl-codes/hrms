@@ -20,7 +20,8 @@
         <form asp-action="TrainingCompletion" method="get" class="d-flex align-items-center gap-2 mb-3 no-print">
             <input type="hidden" name="showIncompleteOnly" value="false" />
             <div class="form-check form-switch mb-0">
-                <input class="form-check-input" type="checkbox" id="showIncompleteOnly" name="showIncompleteOnly" value="true" checked="@Model.ShowIncompleteOnly" />
+                <input class="form-check-input" type="checkbox" id="showIncompleteOnly" name="showIncompleteOnly"
+                       value="true" checked="@Model.ShowIncompleteOnly" />
                 <label class="form-check-label" for="showIncompleteOnly">Show Incomplete/Absent Only</label>
             </div>
             <button type="submit" class="btn btn-primary btn-sm">Apply</button>
@@ -84,7 +85,8 @@
                                     <td>@record.SessionTitle</td>
                                     <td>@record.SessionDateUtc.ToString("yyyy-MM-dd HH:mm")</td>
                                     <td>
-                                        <span class="badge @(record.Status == EnrollmentStatus.Absent ? "text-bg-danger" : "text-bg-warning text-dark")">
+                                        <span
+                                            class="badge @(record.Status == EnrollmentStatus.Absent ? "text-bg-danger" : "text-bg-warning text-dark")">
                                             @record.Status
                                         </span>
                                     </td>
