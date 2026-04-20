@@ -33,6 +33,7 @@ public class JobPostingsController : Controller
         return RedirectToAction("Apply", "Applications", new { id });
     }
 
+    [AllowAnonymous]
     public IActionResult Details(int id)
     {
         var jobPosting = _dbContext.JobPostings.FirstOrDefault(job => job.Id == id);

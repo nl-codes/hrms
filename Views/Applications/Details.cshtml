@@ -42,14 +42,21 @@
     </dl>
 
     <div class="d-flex gap-2 flex-wrap">
-        <a class="btn btn-outline-secondary" asp-action="Index">Back to Review</a>
-        @if (Model.CanHire)
+        @if (User.IsInRole("HiringManager"))
         {
-            <form asp-action="Hire" method="post" class="d-inline">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="applicationId" value="@Model.Id" />
-                <button type="submit" class="btn btn-primary">Hire Applicant</button>
-            </form>
+            <a class="btn btn-outline-secondary" asp-action="Index">Back to Review</a>
+            @if (Model.CanHire)
+            {
+                <form asp-action="Hire" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="applicationId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-primary">Hire Applicant</button>
+                </form>
+            }
+        }
+        else
+        {
+            <a class="btn btn-outline-secondary" asp-action="MyApplications">Back to My Applications</a>
         }
     </div>
 </div>

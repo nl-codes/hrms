@@ -34,7 +34,7 @@
                 <tbody>
                     @foreach (var app in Model)
                     {
-                        <tr>
+                        <tr style="cursor: pointer;" onclick="location.href='@Url.Action("Details", new { id = app.Id })';">
                             <td>#@app.Id</td>
                             <td>@app.JobTitle</td>
                             <td><partial name="_ApplicationStatusBadge" model="app.Status" /></td>

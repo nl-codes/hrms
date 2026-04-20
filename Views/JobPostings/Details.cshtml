@@ -28,13 +28,16 @@
         </dl>
 
         <div class="d-flex gap-2">
-            @if (Model.IsActive)
+            @if (!User.IsInRole("HiringManager"))
             {
-                <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply" asp-route-id="@Model.Id">Apply</a>
-            }
-            else
-            {
-                <span class="btn btn-secondary disabled">Hiring Completed</span>
+                @if (Model.IsActive)
+                {
+                    <a class="btn btn-primary" asp-controller="Applications" asp-action="Apply" asp-route-id="@Model.Id">Apply</a>
+                }
+                else
+                {
+                    <span class="btn btn-secondary disabled">Hiring Completed</span>
+                }
             }
             <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
         </div>

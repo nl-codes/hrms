@@ -267,7 +267,7 @@ public class ApplicationsController(ApplicationDbContext dbContext, UserManager<
         return View(viewModel);
     }
 
-    [Authorize(Roles = Roles.HiringManager)]
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> Details(int id)
     {

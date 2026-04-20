@@ -119,4 +119,11 @@ public class AccountController(
         await _signInManager.SignOutAsync();
         return RedirectToAction("Index", "Home");
     }
+
+    [Authorize]
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
 }
