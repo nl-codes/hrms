@@ -12,15 +12,10 @@
             </p>
         </div>
         <div class="d-flex flex-wrap gap-2 no-print">
-            <a class="btn btn-outline-primary" asp-action="WorkHours" asp-route-periodType="week">Weekly Work Hours</a>
-            <a class="btn btn-outline-primary" asp-action="WorkHours" asp-route-periodType="month">Monthly Work
-                Hours</a>
-                <a class="btn btn-outline-primary" asp-action="TrainingCompletion">Training Completion</a>
-                <a class="btn btn-outline-primary" asp-action="HiringFunnel">Hiring Funnel</a>
-                <a class="btn btn-outline-primary" asp-action="Payroll">Payroll Report</a>
-                <a class="btn btn-primary" asp-action="ExportPayrollToCsv"
-                   asp-route-month="@DateTime.UtcNow.ToString("yyyy-MM-dd")">Export Payroll CSV</a>
-            </div>
+            <a class="btn btn-outline-primary" asp-action="WorkHours">Weekly Work Hours</a>
+            <a class="btn btn-outline-primary" asp-action="TrainingCompletion">Training Completion</a>
+            <a class="btn btn-outline-primary" asp-action="HiringFunnel">Hiring Funnel</a>
+        </div>
         </div>
 
         <div class="row g-3">
