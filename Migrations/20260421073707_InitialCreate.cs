@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HRMS.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialIdentitySetup : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -82,8 +82,11 @@ namespace HRMS.Migrations
                     Description = table.Column<string>(type: "varchar(4000)", maxLength: 4000, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     RequiredExperienceYears = table.Column<int>(type: "int", nullable: false),
+                    RequiredDegree = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     RequiredSkillsCsv = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    OpenPositions = table.Column<int>(type: "int", nullable: false),
                     IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     BaseHourlyRate = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
                     CreatedAtUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false)
@@ -102,6 +105,7 @@ namespace HRMS.Migrations
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     EmployeeUserId = table.Column<string>(type: "varchar(450)", maxLength: 450, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    WeekStartDate = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     StartTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     EndTimeUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     HourlyRate = table.Column<decimal>(type: "decimal(65,30)", nullable: false)
@@ -240,6 +244,29 @@ namespace HRMS.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Instructors",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    UserId = table.Column<string>(type: "varchar(450)", maxLength: 450, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Domain = table.Column<string>(type: "varchar(120)", maxLength: 120, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Instructors", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Instructors_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "JobApplications",
                 columns: table => new
                 {
@@ -248,9 +275,20 @@ namespace HRMS.Migrations
                     JobPostingId = table.Column<int>(type: "int", nullable: false),
                     ApplicantUserId = table.Column<string>(type: "varchar(450)", maxLength: 450, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    HighestDegree = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ApplicantPhone = table.Column<string>(type: "varchar(30)", maxLength: 30, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CoverLetter = table.Column<string>(type: "varchar(4000)", maxLength: 4000, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    RejectionReason = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    SubmittedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ApplicantExperienceYears = table.Column<int>(type: "int", nullable: false),
                     ApplicantSkillsCsv = table.Column<string>(type: "varchar(1000)", maxLength: 1000, nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    AttemptNumber = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
                     Status = table.Column<int>(type: "int", nullable: false),
                     AppliedAtUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     ScreenedAtUtc = table.Column<DateTime>(type: "datetime(6)", nullable: true),
@@ -260,9 +298,72 @@ namespace HRMS.Migrations
                 {
                     table.PrimaryKey("PK_JobApplications", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_JobApplications_AspNetUsers_ApplicantUserId",
+                        column: x => x.ApplicantUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_JobApplications_JobPostings_JobPostingId",
                         column: x => x.JobPostingId,
                         principalTable: "JobPostings",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "TrainingSessions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Title = table.Column<string>(type: "varchar(160)", maxLength: 160, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Description = table.Column<string>(type: "varchar(2000)", maxLength: 2000, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    SessionDateUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    MaxEnrollment = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    InstructorId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TrainingSessions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TrainingSessions_Instructors_InstructorId",
+                        column: x => x.InstructorId,
+                        principalTable: "Instructors",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "TrainingEnrollments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    TrainingSessionId = table.Column<int>(type: "int", nullable: false),
+                    EmployeeUserId = table.Column<string>(type: "varchar(450)", maxLength: 450, nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    EnrolledAtUtc = table.Column<DateTime>(type: "datetime(6)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TrainingEnrollments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TrainingEnrollments_AspNetUsers_EmployeeUserId",
+                        column: x => x.EmployeeUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TrainingEnrollments_TrainingSessions_TrainingSessionId",
+                        column: x => x.TrainingSessionId,
+                        principalTable: "TrainingSessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 })
@@ -306,14 +407,41 @@ namespace HRMS.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Instructors_UserId",
+                table: "Instructors",
+                column: "UserId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_JobApplications_ApplicantUserId",
+                table: "JobApplications",
+                column: "ApplicantUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_JobApplications_JobPostingId",
                 table: "JobApplications",
                 column: "JobPostingId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_WorkShifts_EmployeeUserId_StartTimeUtc_EndTimeUtc",
+                name: "IX_TrainingEnrollments_EmployeeUserId",
+                table: "TrainingEnrollments",
+                column: "EmployeeUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TrainingEnrollments_TrainingSessionId_EmployeeUserId",
+                table: "TrainingEnrollments",
+                columns: new[] { "TrainingSessionId", "EmployeeUserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TrainingSessions_InstructorId",
+                table: "TrainingSessions",
+                column: "InstructorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WorkShifts_EmployeeUserId_WeekStartDate_StartTimeUtc_EndTime~",
                 table: "WorkShifts",
-                columns: new[] { "EmployeeUserId", "StartTimeUtc", "EndTimeUtc" });
+                columns: new[] { "EmployeeUserId", "WeekStartDate", "StartTimeUtc", "EndTimeUtc" });
         }
 
         /// <inheritdoc />
@@ -338,16 +466,25 @@ namespace HRMS.Migrations
                 name: "JobApplications");
 
             migrationBuilder.DropTable(
+                name: "TrainingEnrollments");
+
+            migrationBuilder.DropTable(
                 name: "WorkShifts");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "JobPostings");
 
             migrationBuilder.DropTable(
-                name: "JobPostings");
+                name: "TrainingSessions");
+
+            migrationBuilder.DropTable(
+                name: "Instructors");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
         }
     }
 }
