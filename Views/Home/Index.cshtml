@@ -51,110 +51,96 @@
 
                     <div class="col-lg-4 col-md-6">
                         <div class="dashboard-card h-100">
-                            <h2>Training</h2>
-                            <p>Review training reports and monitor session activity.</p>
+                            <h2>Reports Dashboard</h2>
+                            <p>Workforce efficiency, training progress, and hiring metrics.</p>
                             <div class="d-grid gap-2">
-                                <a class="btn btn-outline-secondary" asp-controller="Reports" asp-action="TrainingCompletion">Training
-                                    Completion Report</a>
-                                </div>
+                                <a class="btn btn-primary" asp-controller="Reports" asp-action="Index">Open Reports Dashboard</a>
                             </div>
                         </div>
+                    </div>
+                }
 
-                        <div class="col-lg-4 col-md-6">
-                            <div class="dashboard-card h-100">
-                                <h2>Financial Integration</h2>
-                                <p>Generate payroll summaries and export FIS-ready monthly payroll files.</p>
-                                <div class="d-grid gap-2">
-                                    <a class="btn btn-primary" asp-controller="Reports" asp-action="Index">Open Reports Dashboard</a>
-                                    <a class="btn btn-outline-primary" asp-controller="Reports" asp-action="WorkHours" asp-route-periodType="week">View Work Hours Report</a>
-                                    <a class="btn btn-outline-dark" asp-controller="Reports" asp-action="ExportPayrollToCsv"
-                                       asp-route-month="@DateTime.UtcNow.ToString("yyyy-MM-dd")">Export Payroll for FIS</a>
+                @if (isApplicant)
+                {
+                    <div class="col-lg-4 col-md-6">
+                        <div class="dashboard-card h-100">
+                            <h2>Applicant</h2>
+                            <p>Review open roles and submit a profile for automated screening.</p>
+                            <div class="d-grid gap-2">
+                                <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Browse Jobs</a>
+                                <a class="btn btn-outline-secondary" asp-controller="Applications" asp-action="MyApplications">My
+                                    Applications</a>
                                 </div>
                             </div>
                         </div>
                     }
 
-                    @if (isApplicant)
+                    @if (isEmployee)
                     {
                         <div class="col-lg-4 col-md-6">
                             <div class="dashboard-card h-100">
-                                <h2>Applicant</h2>
-                                <p>Review open roles and submit a profile for automated screening.</p>
+                                <h2>Employee</h2>
+                                <p>Pick shifts, review weekly hours, and stay at the 6/36 schedule target.</p>
                                 <div class="d-grid gap-2">
-                                    <a class="btn btn-primary" asp-controller="JobPostings" asp-action="Index">Browse Jobs</a>
-                                    <a class="btn btn-outline-secondary" asp-controller="Applications" asp-action="MyApplications">My
-                                        Applications</a>
-                                    </div>
+                                    <a class="btn btn-primary" asp-controller="Scheduling" asp-action="Index">My Schedule</a>
                                 </div>
                             </div>
-                        }
+                        </div>
 
-                        @if (isEmployee)
-                        {
-                            <div class="col-lg-4 col-md-6">
-                                <div class="dashboard-card h-100">
-                                    <h2>Employee</h2>
-                                    <p>Pick shifts, review weekly hours, and stay at the 6/36 schedule target.</p>
-                                    <div class="d-grid gap-2">
-                                        <a class="btn btn-primary" asp-controller="Scheduling" asp-action="Index">My Schedule</a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-4 col-md-6">
-                                <div class="dashboard-card h-100">
-                                    <h2>Training</h2>
-                                    <p>Enroll in active training sessions and track attendance outcomes.</p>
-                                    <div class="d-grid gap-2">
-                                        <a class="btn btn-primary" asp-controller="Training" asp-action="AllSessions">View All Training
+                        <div class="col-lg-4 col-md-6">
+                            <div class="dashboard-card h-100">
+                                <h2>Training</h2>
+                                <p>Enroll in active training sessions and track attendance outcomes.</p>
+                                <div class="d-grid gap-2">
+                                    <a class="btn btn-primary" asp-controller="Training" asp-action="AllSessions">View All Training
+                                        Sessions</a>
+                                        <a class="btn btn-outline-secondary" asp-controller="Training" asp-action="MySessions">My Training
                                             Sessions</a>
-                                            <a class="btn btn-outline-secondary" asp-controller="Training" asp-action="MySessions">My Training
-                                                Sessions</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (isInstructor)
+                            {
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="dashboard-card h-100">
+                                        <h2>Instructor Console</h2>
+                                        <p>Create and manage sessions, then record attendance outcomes.</p>
+                                        <div class="d-grid gap-2">
+                                            <a class="btn btn-primary" asp-controller="Training" asp-action="InstructorIndex">Training
+                                                Console</a>
                                             </div>
                                         </div>
                                     </div>
                                 }
 
-                                @if (isInstructor)
+                                @if (isProductionManager)
                                 {
                                     <div class="col-lg-4 col-md-6">
                                         <div class="dashboard-card h-100">
-                                            <h2>Instructor Console</h2>
-                                            <p>Create and manage sessions, then record attendance outcomes.</p>
+                                            <h2>Production Manager</h2>
+                                            <p>View work schedules without editing employee assignments.</p>
                                             <div class="d-grid gap-2">
-                                                <a class="btn btn-primary" asp-controller="Training" asp-action="InstructorIndex">Training
-                                                    Console</a>
-                                                </div>
+                                                <a class="btn btn-primary" asp-controller="Scheduling" asp-action="Index">View Schedule</a>
                                             </div>
                                         </div>
-                                    }
+                                    </div>
+                                }
 
-                                    @if (isProductionManager)
-                                    {
-                                        <div class="col-lg-4 col-md-6">
-                                            <div class="dashboard-card h-100">
-                                                <h2>Production Manager</h2>
-                                                <p>View work schedules without editing employee assignments.</p>
-                                                <div class="d-grid gap-2">
-                                                    <a class="btn btn-primary" asp-controller="Scheduling" asp-action="Index">View Schedule</a>
-                                                </div>
+                                @if (!isAuthenticated)
+                                {
+                                    <div class="col-lg-6 col-md-8">
+                                        <div class="dashboard-card h-100">
+                                            <h2>Public Access</h2>
+                                            <p>Use the shared login portal or browse the active job board.</p>
+                                            <div class="d-grid gap-2">
+                                                <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Login</a>
+                                                <a class="btn btn-outline-primary" asp-controller="Account" asp-action="Register">Register</a>
+                                                <a class="btn btn-outline-dark" asp-controller="JobPostings" asp-action="Index">Open Jobs</a>
                                             </div>
                                         </div>
-                                    }
-
-                                    @if (!isAuthenticated)
-                                    {
-                                        <div class="col-lg-6 col-md-8">
-                                            <div class="dashboard-card h-100">
-                                                <h2>Public Access</h2>
-                                                <p>Use the shared login portal or browse the active job board.</p>
-                                                <div class="d-grid gap-2">
-                                                    <a class="btn btn-primary" asp-controller="Account" asp-action="Login">Login</a>
-                                                    <a class="btn btn-outline-primary" asp-controller="Account" asp-action="Register">Register</a>
-                                                    <a class="btn btn-outline-dark" asp-controller="JobPostings" asp-action="Index">Open Jobs</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
+                                    </div>
+                                }
                             </div>
+                        </div>

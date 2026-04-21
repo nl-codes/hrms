@@ -5,25 +5,20 @@
     var currentMonthToken = Model.CurrentMonthStart.ToString("yyyy-MM-dd");
 }
 
-<div class="dashboard-card">
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+<div class="dashboard-shell report-page">
+    <div class="dashboard-card d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
             <h1 class="h3 mb-1">Payroll Report</h1>
-            <p class="text-muted mb-0">Financial Information System integration for worked hours and training
-                completions.</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a class="btn btn-outline-secondary no-print" asp-action="Index">Reports Dashboard</a>
-                <a class="btn btn-outline-primary" asp-action="Payroll"
-                       asp-route-startDate="@Model.CurrentMonthStart.ToString("yyyy-MM-dd")"
-                       asp-route-endDate="@Model.CurrentMonthEnd.ToString("yyyy-MM-dd")">
-                    Generate Monthly Payroll
-                </a>
-                <a class="btn btn-primary" asp-action="ExportPayrollToCsv" asp-route-month="@currentMonthToken">Export
-                    Payroll for FIS</a>
-                    <button type="button" class="btn btn-outline-dark no-print" onclick="window.print()">Print Report</button>
-                </div>
-            </div>
+            <p class="text-muted mb-0">Financial Information System integration for worked hours and training completions.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 no-print">
+            <a class="btn btn-outline-secondary" asp-action="Index">Reports Dashboard</a>
+            <a class="btn btn-primary" asp-action="ExportPayrollToCsv" asp-route-month="@currentMonthToken">Export Payroll for FIS</a>
+            <button type="button" class="btn btn-outline-dark" onclick="window.print()">Print Report</button>
+        </div>
+    </div>
+
+    <div class="dashboard-card">
 
             <form asp-action="Payroll" method="get" class="row g-3 align-items-end mb-4">
                 <div class="col-md-3">
@@ -90,3 +85,5 @@
                 </div>
             }
         </div>
+    </div>
+</div>

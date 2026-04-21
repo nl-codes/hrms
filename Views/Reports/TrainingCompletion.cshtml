@@ -18,14 +18,21 @@
 
     <div class="dashboard-card">
         <form asp-action="TrainingCompletion" method="get" class="d-flex align-items-center gap-2 mb-3 no-print">
-            <input type="hidden" name="showIncompleteOnly" value="false" />
             <div class="form-check form-switch mb-0">
-                <input class="form-check-input" type="checkbox" id="showIncompleteOnly" name="showIncompleteOnly"
-                       value="true" checked="@Model.ShowIncompleteOnly" />
+                <input class="form-check-input" type="checkbox" id="showIncompleteOnly" onchange="document.getElementById('trainingForm').submit()"
+                       checked="@Model.ShowIncompleteOnly" />
                 <label class="form-check-label" for="showIncompleteOnly">Show Incomplete/Absent Only</label>
             </div>
-            <button type="submit" class="btn btn-primary btn-sm">Apply</button>
         </form>
+        <form id="trainingForm" asp-action="TrainingCompletion" method="get" style="display:none;">
+            <input type="hidden" id="showIncompleteOnlyInput" name="showIncompleteOnly" value="@Model.ShowIncompleteOnly.ToString().ToLower()" />
+        </form>
+        <script>
+            document.getElementById('showIncompleteOnly').addEventListener('change', function() {
+                document.getElementById('showIncompleteOnlyInput').value = this.checked ? 'true' : 'false';
+                document.getElementById('trainingForm').submit();
+            });
+        </script>
 
         @if (!Model.Rows.Any())
         {
