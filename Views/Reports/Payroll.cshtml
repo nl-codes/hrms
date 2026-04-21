@@ -9,81 +9,82 @@
     <div class="dashboard-card d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
             <h1 class="h3 mb-1">Payroll Report</h1>
-            <p class="text-muted mb-0">Financial Information System integration for worked hours and training completions.</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2 no-print">
-            <a class="btn btn-outline-secondary" asp-action="Index">Reports Dashboard</a>
-            <a class="btn btn-primary" asp-action="ExportPayrollToCsv" asp-route-month="@currentMonthToken">Export Payroll for FIS</a>
-            <button type="button" class="btn btn-outline-dark" onclick="window.print()">Print Report</button>
-        </div>
-    </div>
-
-    <div class="dashboard-card">
-
-            <form asp-action="Payroll" method="get" class="row g-3 align-items-end mb-4">
-                <div class="col-md-3">
-                    <label class="form-label" for="startDate">Start Date</label>
-                    <input id="startDate" name="startDate" type="date" value="@Model.StartDate.ToString("yyyy-MM-dd")"
-                           class="form-control" required />
+            <p class="text-muted mb-0">Financial Information System integration for worked hours and training
+                completions.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2 no-print">
+                <a class="btn btn-outline-secondary" asp-action="Index">Reports Dashboard</a>
+                <a class="btn btn-primary" asp-action="ExportPayrollToCsv" asp-route-month="@currentMonthToken">Export
+                    Payroll for FIS</a>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label" for="endDate">End Date</label>
-                    <input id="endDate" name="endDate" type="date" value="@Model.EndDate.ToString("yyyy-MM-dd")"
-                           class="form-control" required />
-                </div>
-                <div class="col-md-6 d-flex gap-2 flex-wrap">
-                    <button type="submit" class="btn btn-outline-secondary">Apply Date Range</button>
-                    <a class="btn btn-outline-dark" asp-action="ExportPayrollToCsv"
-                       asp-route-month="@Model.StartDate.ToString("yyyy-MM-dd")">Export Selected Month</a>
-                </div>
-            </form>
+            </div>
 
-            @if (!Model.Rows.Any())
-            {
-                <div class="alert alert-info mb-0">No work shifts were found in the selected date range.</div>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0">
-                        <thead>
-                            <tr>
-                                <th>Employee Name</th>
-                                <th>Employee ID</th>
-                                <th>Total Hours Worked</th>
-                                <th>Trainings Completed</th>
-                                <th>Hourly Rate</th>
-                                <th>Gross Pay</th>
-                                <th>Weekly Check</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var row in Model.Rows)
-                            {
+            <div class="dashboard-card">
+
+                <form asp-action="Payroll" method="get" class="row g-3 align-items-end mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label" for="startDate">Start Date</label>
+                        <input id="startDate" name="startDate" type="date" value="@Model.StartDate.ToString("yyyy-MM-dd")"
+                               class="form-control" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="endDate">End Date</label>
+                        <input id="endDate" name="endDate" type="date" value="@Model.EndDate.ToString("yyyy-MM-dd")"
+                               class="form-control" required />
+                    </div>
+                    <div class="col-md-6 d-flex gap-2 flex-wrap">
+                        <button type="submit" class="btn btn-outline-secondary">Apply Date Range</button>
+                        <a class="btn btn-outline-dark" asp-action="ExportPayrollToCsv"
+                           asp-route-month="@Model.StartDate.ToString("yyyy-MM-dd")">Export Selected Month</a>
+                    </div>
+                </form>
+
+                @if (!Model.Rows.Any())
+                {
+                    <div class="alert alert-info mb-0">No work shifts were found in the selected date range.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
                                 <tr>
-                                    <td>@row.EmployeeName</td>
-                                    <td>@row.EmployeeId</td>
-                                    <td>@row.TotalHoursWorked.ToString("0.##")</td>
-                                    <td>@row.TrainingsCompleted</td>
-                                    <td>@row.HourlyRate.ToString("C")</td>
-                                    <td>@row.GrossPay.ToString("C")</td>
-                                    <td>
-                                        @if (string.IsNullOrWhiteSpace(row.WeeklyRequirementWarning))
-                                        {
-                                            <span class="badge text-bg-success">Met</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge text-bg-warning text-dark">Warning</span>
-                                            <div class="small text-muted mt-1">@row.WeeklyRequirementWarning</div>
-                                        }
-                                    </td>
+                                    <th>Employee Name</th>
+                                    <th>Employee ID</th>
+                                    <th>Total Hours Worked</th>
+                                    <th>Trainings Completed</th>
+                                    <th>Hourly Rate</th>
+                                    <th>Gross Pay</th>
+                                    <th>Weekly Check</th>
                                 </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
+                            </thead>
+                            <tbody>
+                                @foreach (var row in Model.Rows)
+                                {
+                                    <tr>
+                                        <td>@row.EmployeeName</td>
+                                        <td>@row.EmployeeId</td>
+                                        <td>@row.TotalHoursWorked.ToString("0.##")</td>
+                                        <td>@row.TrainingsCompleted</td>
+                                        <td>@row.HourlyRate.ToString("C")</td>
+                                        <td>@row.GrossPay.ToString("C")</td>
+                                        <td>
+                                            @if (string.IsNullOrWhiteSpace(row.WeeklyRequirementWarning))
+                                            {
+                                                <span class="badge text-bg-success">Met</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-warning text-dark">Warning</span>
+                                                <div class="small text-muted mt-1">@row.WeeklyRequirementWarning</div>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
         </div>
     </div>
-</div>
