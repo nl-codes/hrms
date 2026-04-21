@@ -1,5 +1,6 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,13 +10,17 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/HRMS.styles.css" asp-append-version="true" />
 </head>
+
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav
+            class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow sticky-top">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">HRMS</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <strong>HRMS</strong>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
@@ -23,55 +28,108 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav ms-auto align-items-sm-center">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            var userRole = User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value ?? "NoRole";
-                            <li class="nav-item me-sm-2">
-                                <span class="nav-link text-dark">@User.Identity.Name</span>
-                            </li>
-                            <li class="nav-item me-sm-2">
-                                <span class="badge text-bg-secondary">@userRole</span>
-                            </li>
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">Logout</button>
-                                </form>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - HRMS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html>
+                        @if (User.IsInRole("HiringManager"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="JobPostings" asp-action="Index">Job
+                                    Management</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Applications"
+                                       asp-action="Index">Applications</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Instructor" asp-action="Index">Instructor
+                                        Management</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="Reports" asp-action="Index">Reports</a>
+                                    </li>
+                                }
+
+                                @if (User.IsInRole("Instructor"))
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="Training"
+                                           asp-action="InstructorIndex">Training Console</a>
+                                    </li>
+                                }
+
+                                @if (User.IsInRole("Employee"))
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-controller="Scheduling" asp-action="Index">My Schedule</a>
+                                    </li>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link dropdown-toggle text-dark" href="#" id="trainingDropdown" role="button"
+                                               data-bs-toggle="dropdown" aria-expanded="false">
+                                            Training
+                                        </a>
+                                        <ul class="dropdown-menu" aria-labelledby="trainingDropdown">
+                                            <li><a class="dropdown-item" asp-controller="Training" asp-action="AllSessions">View All
+                                                Sessions</a></li>
+                                                <li><a class="dropdown-item" asp-controller="Training" asp-action="MySessions">My
+                                                    Sessions</a></li>
+                                                </ul>
+                                            </li>
+                                        }
+
+                                        @if (User.IsInRole("Applicant"))
+                                        {
+                                            <li class="nav-item">
+                                                <a class="nav-link text-dark" asp-controller="JobPostings" asp-action="Index">Job
+                                                    Postings</a>
+                                                </li>
+                                            }
+                                        </ul>
+
+                                        <ul class="navbar-nav ms-auto align-items-sm-center">
+                                            @if (User.Identity?.IsAuthenticated == true)
+                                            {
+                                                var userRole = User.Claims.FirstOrDefault(c => c.Type ==
+                                            System.Security.Claims.ClaimTypes.Role)?.Value ?? "User";
+                                                var displayName = User.Identity.Name ?? "User";
+                                                <li class="nav-item me-sm-2 d-flex align-items-center gap-2">
+                                                    <span class="nav-link text-dark mb-0">Hello, <strong>@displayName</strong></span>
+                                                    <span class="badge bg-info text-dark">@userRole</span>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Logout</button>
+                                                    </form>
+                                                </li>
+                                            }
+                                            else
+                                            {
+                                                <li class="nav-item">
+                                                    <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link text-dark" asp-controller="Account" asp-action="Register">Register</a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </div>
+                            </nav>
+                        </header>
+                        <div class="container">
+                            <main role="main" class="pb-3">
+                                @RenderBody()
+                            </main>
+                        </div>
+
+                        <footer class="border-top footer text-muted">
+                            <div class="container">
+                                &copy; 2026 - HRMS - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            </div>
+                        </footer>
+                        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+                        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+                        <script src="~/js/site.js" asp-append-version="true"></script>
+                        @await RenderSectionAsync("Scripts", required: false)
+                    </body>
+
+                </html>
